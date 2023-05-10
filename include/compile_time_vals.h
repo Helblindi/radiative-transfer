@@ -23,11 +23,16 @@ namespace rt
                                                         // reflective - 2 
    const static int bc_right_indicator = 1;             // vacuum - 0, // TODO: Change this to an array that matches M / 2
                                                         // source - 1, 
-                                                        // reflective - 2 
+                                                        // reflective - 2 s
 
    const static double rho = 1.;                        // Material density
    const static double kappa = 1.;                      // Absorption opacity
-   const static double T = 2.;                          // Material temperature
+   const static double T = 1.;                          // Material temperature
+
+   /* Time Stepping Options */
+   const static int ts_method = 2;                      // 1 - Backward Euler, 2 - BDF2, 3 - CN, 4 - BDF2 from Morel-Lou
+   const static double dt = 0.0001;
+   const static int _max_timesteps = 500;
 
    // If either boundary indicator is source, those values need to be specified
    const double test_bc = a * c * pow(T, 4) / (4*M_PI);
