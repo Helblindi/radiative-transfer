@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set the project name
 project(transfer LANGUAGES C CXX)
 
+# Prevent in source builds
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+include(PreventInSourceBuilds)
+
 if(APPLE)
   find_package(Python 3 COMPONENTS Interpreter Development NumPy REQUIRED)
   set(PYTHON_MAJOR $ENV{Python_VERSION_MAJOR})
