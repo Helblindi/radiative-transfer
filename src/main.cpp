@@ -193,7 +193,8 @@ void inverseMatrix(const double (&matrix)[2][2], const int n, double (&inverse)[
    double det = determinant(matrix, n);
    if (abs(det) < 1e-10)
    {
-      double a = 1/0;
+      std::cout << "Cannot divide by 0.\n";
+      assert(false);
    }
    inverse[0][0] = matrix[1][1] / det;
    inverse[0][1] = - matrix[0][1] / det;
