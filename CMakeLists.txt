@@ -1,24 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE) # Look into this when have time.
 
-set(HOMEBREW_PREFIX "/opt/homebrew"
-  CACHE PATH "Path to Homebrew installation")
-
-set(CMAKE_C_COMPILER "${HOMEBREW_PREFIX}/bin/gcc-12")
-set(CMAKE_CXX_COMPILER "${HOMEBREW_PREFIX}/bin/g++-12")
+# Require C++11 and disable compiler-specific extensions
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set the project name
 project(transfer LANGUAGES C CXX)
-
-# Verify C++ and Fortran can communicate
-# include(FortranCInterface)
-# FortranCInterface_VERIFY(CXX)
-
-# find python libraries
-# SET(PYTHON_LIBRARIES "/opt/homebrew/Frameworks/Python.framework/Versions/3.10/lib/libpython3.10.dylib")
-# SET(PYTHON_INCLUDE_DIR "/opt/homebrew/Frameworks/Python.framework/Versions/3.10/include/python3.10")
-# find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
-# find_package(PythonLibs 3.0 REQUIRED)
 
 if(APPLE)
   find_package(Python 3 COMPONENTS Interpreter Development NumPy REQUIRED)
@@ -64,9 +52,6 @@ if (NOT CMAKE_CXX_COMPILER)
     set(MPI_CXX_LIBRARIES "")
   endif()
 endif()
-
-# Include paths and libraries needed by MFEM
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MFEM_CXX_FLAGS}")
 
 ### Include Directories
 INCLUDE_DIRECTORIES(include src)
