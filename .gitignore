@@ -6,7 +6,7 @@
 radiative-transfer.code-workspace
 build/ 
 
-# Tests
+# planckian functions
 planckian/
 
 #Unknown
