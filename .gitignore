@@ -6,30 +6,14 @@
 radiative-transfer.code-workspace
 build/ 
 
-# Executable
-transfer
-
-# Cmake generated files
-.DS_Store
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-libcomp_lambda.a
-makefile 
-CTestTestfile.cmake
-
 # Tests
-tests/
-Testing/
+planckian/
 
 #Unknown
-DartConfiguration.tcl
+.DS_Store
 
 #compile commands
 compile_commands.json
-
-# dependencies
-_deps/
 
 # Unfinished lapack library
 src/lapack.cpp
