@@ -38,8 +38,8 @@
 #include <cmath>
 #include <cassert>
 #include <limits>
+#include <Eigen/Dense>
 
-#include "NDArray.h"
 #include "Energy.h"
 #include "Constants.h"
 
@@ -136,9 +136,7 @@ public:
   double integrate_dBdT_grey(double T);
 
   // This is a bit of a hack, but not too bad
-  void get_Planck(double Te, std::vector<Group> &edisc,
-		  ndarray::array<double, 1> &B, ndarray::array<double, 1> &dBdT);
-
-  void get_Planck(double T, std::vector<Group> &edisc,
-		  std::vector<double> &B, std::vector<double> &dBdT);
+  void get_Planck(double T, Eigen::Ref<Eigen::MatrixXd> edisc,
+		            Eigen::Ref<Eigen::VectorXd> B, 
+                  Eigen::Ref<Eigen::VectorXd> dBdT);
 };

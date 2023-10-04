@@ -39,7 +39,6 @@
 using std::pow;
 using std::abs;
 using std::max;
-using std::vector;
 using std::copy;
 
 Planck::Planck(double accuracy)
@@ -48,26 +47,13 @@ Planck::Planck(double accuracy)
   gauss_quad_setup();
 }
 
-// This is a bit of a hack, but not too bad
-void Planck::get_Planck(double Te, vector<Group> &edisc,
-		ndarray::array<double, 1> &B, ndarray::array<double, 1> &dBdT)
-{
-  size_t num_groups = edisc.size();
-  vector<double> tB(num_groups), tdBdT(num_groups);
-  get_Planck(Te, edisc, tB, tdBdT);
-
-  assert(B.size() == num_groups);
-  assert(dBdT.size() == num_groups);
-  copy(tB.begin(), tB.end(), B.begin());
-  copy(tdBdT.begin(), tdBdT.end(), dBdT.begin());
-}
-
-void Planck::get_Planck(double T, vector<Group> &edisc,
-	vector<double> &B, vector<double> &dBdT)
+void Planck::get_Planck(double T, Eigen::Ref<Eigen::MatrixXd> edisc,
+	                     Eigen::Ref<Eigen::VectorXd> B, 
+                        Eigen::Ref<Eigen::VectorXd> dBdT)
 {
   assert(T >= 0.0);
 
-  size_t num_groups = edisc.size();
+  size_t num_groups = edisc.rows();
   assert(B.size() == num_groups);
   assert(dBdT.size() == num_groups);
 
@@ -75,11 +61,11 @@ void Planck::get_Planck(double T, vector<Group> &edisc,
   double dBdT_sum = integrate_dBdT_grey(T);
   for(size_t g = 0;g < num_groups - 1;++g)
   {
-    double integral = integrate_B(T, edisc[g].eg_min, edisc[g].eg_max);
+    double integral = integrate_B(T, edisc(g,0), edisc(g,1));
     B[g]   = integral;
     B_sum -= integral;
 
-    integral = integrate_dBdT(T, edisc[g].eg_min, edisc[g].eg_max);
+    integral = integrate_dBdT(T, edisc(g,0), edisc(g,1));
     dBdT[g]   = integral;
     dBdT_sum -= integral;
   }

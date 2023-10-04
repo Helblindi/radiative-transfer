@@ -61,9 +61,6 @@ if (NOT CMAKE_CXX_COMPILER)
   endif()
 endif()
 
-### Include Directories
-INCLUDE_DIRECTORIES(include src)
-
 # populate matplotlib repository
 include(FetchContent)
 FetchContent_Declare(
@@ -77,17 +74,15 @@ if(NOT matplotlib_POPULATED)
 endif()
 include_directories(SYSTEM ${matplotlib_SOURCE_DIR})
 
+### Include Directories
+INCLUDE_DIRECTORIES(include)
 add_subdirectory(src)
+
+file (GLOB_RECURSE rt_SOURCES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cc)
+file (GLOB_RECURSE rt_HEADERS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/include/*.h)
 
 # Enable testing
 # https://cmake.org/cmake/help/latest/command/add_test.html
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  include(CTest)
-endif()
-
-# Add test folder
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
-
+include(CTest)
+enable_testing()
+add_subdirectory(tests)

@@ -151,16 +151,6 @@ double compute_balance(const double (&ends)[M][N][2],
 /*
 Functions to go in lapack library
 */
-// Function to print a matrix
-void printMatrix(const double matrix[2][2], const int n) {
-   for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-         cout << matrix[i][j] << " ";
-      }
-      cout << endl;
-   }
-   cout << endl;
-}
 
 
 double determinant(const double (&matrix)[2][2], int size) {
@@ -820,31 +810,6 @@ int main()
    plt::legend();
    plt::title("Testing");
    plt::show();
-
-   /* Testing matrix functions */
-   // TODO: Write ctests to validate
-   // double matrix[2][2] = {
-   //    {.235, .165},
-   //    {.111, -1.5}
-   // };
-   
-   // double inverse[2][2];
-   // cout << "Original matrix:\n";
-   // printMatrix(matrix, 2);
-   // std::cout << "Determinant: " << determinant(matrix, 2) << std::endl;
-   // inverseMatrix(matrix, 2, inverse);
-   // cout << "Inverse matrix:\n";
-   // printMatrix(inverse, 2);
-   // cout << "Testing matrix multiply function:\n";
-   // double test_vector[2] = {1., 1.};
-   // double test_result[2];
-
-   // matrixVectorMultiply(inverse, 2, test_vector, test_result);
-   // // Print the result
-   // for (int i = 0; i < 2; i++) {
-   //    cout << test_result[i] << " ";
-   // }
-   // cout << endl;
 
    return 1;
 }

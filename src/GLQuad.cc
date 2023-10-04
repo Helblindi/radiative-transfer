@@ -1,10 +1,14 @@
 #include "GLQuad.h"
 #include "Constants.h"
+#include <iostream>
+
 
 void GLQuad::build(double tolerance)
 {
+  std::cout << "GLQuad build funcall\n";
   m_mu.resize(m_num_points);
   m_wt.resize(m_num_points);
+  std::cout << "Done resizing\n";
 
   double x1  = -1.0;
   double x2  =  1.0;
