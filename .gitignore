@@ -14,7 +14,3 @@ planckian/
 
 #compile commands
 compile_commands.json
-
-# Unfinished lapack library
-src/lapack.cpp
-include/lapack.h
