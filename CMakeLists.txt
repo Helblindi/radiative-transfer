@@ -30,6 +30,10 @@ include_directories(${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIR})
 # link numpy
 link_libraries(Python::NumPy ${Python_LIBRARIES})
 
+# find and link eigen
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+link_libraries(Eigen3::Eigen)
+
 # Load user settings before the defaults - this way the defaults will not
 # overwrite the user set options. If the user has not set all options, we still
 # have the defaults.
