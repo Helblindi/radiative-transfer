@@ -34,13 +34,11 @@
 
 #pragma once
 
-#include <vector>
 #include <cmath>
 #include <cassert>
 #include <limits>
 #include <Eigen/Dense>
 
-#include "Energy.h"
 #include "Constants.h"
 
 /*!
@@ -62,8 +60,9 @@ private:
   double m_accuracy;
 
   /// Points and weights are for integration by gaussian quadrature
-  std::vector<long double> m_points;
-  std::vector<long double> m_weights;
+  typedef Eigen::Matrix<long double, Eigen::Dynamic, 1> VectorXld;
+  VectorXld m_points;
+  VectorXld m_weights;
 
   /// Sets guassian quadrature for integration
   void gauss_quad_setup();

@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <Eigen/Dense>
 
 // 1D Gauss-Legendre quadrature set
@@ -17,12 +16,9 @@ public:
     : m_num_points(num_points), m_norm(norm), 
       m_mu(num_points), m_wt(num_points)
   {
-    std::cout << "Initializing GLQuad\n";
     assert(num_points > 0);
     assert(norm > 0.0);
-    std::cout << "testcp 1\n";
     build();
-    std::cout << "Done initializing\n";
   }
 
   const Eigen::Ref<const Eigen::VectorXd> mu() const { return m_mu; }

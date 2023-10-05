@@ -1,21 +1,12 @@
 #include "Planck.h"
 #include "GLQuad.h"
 
-#include <vector>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
 #include <Eigen/Dense>
 
-using std::cout;
-using std::endl;
-using std::setw;
-using std::left;
-using std::showpos;
-using std::noshowpos;
-using std::cin;
-using std::vector;
-using std::pow;
+using namespace std;
 	
 //--------------------------
 // PLANCK FUNCTION PROTOTYPE
