@@ -14,6 +14,19 @@ namespace plt = matplotlibcpp;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+template<typename Scalar_, int rank>
+// void shape(const Eigen::Tensor<Scalar_, rank>& x, Eigen::Ref<Eigen::VectorXd> F)
+void shape(const Eigen::Tensor<Scalar_, rank>& x)
+{
+  cout << "( ";  
+  for (int i(0); i<x.NumDimensions; i++){
+      cout << x.dimensions()[i];
+      cout << ",";
+
+  }
+  cout << ")";  
+}
+
 /* Function to display the parameters used */
 void display_input_quantities()
 {
@@ -79,10 +92,12 @@ void display_input_quantities()
 void compute_angle_integrated_density(const Eigen::MatrixXd psi, 
                                       Eigen::Ref<Eigen::VectorXd> phi)
 {
-   for (int i = 0; i < N; i++)
+   int _M = psi.rows(), _N = psi.cols();
+
+   for (int i = 0; i < _N; i++)
    {
       phi[i] = 0.;
-      for (int j = 0.; j < M; j++)
+      for (int j = 0; j < _M; j++)
       {
          phi[i] += G_w[j] * psi(j,i);
       }
@@ -90,14 +105,15 @@ void compute_angle_integrated_density(const Eigen::MatrixXd psi,
 }
 
 
-// void compute_radiative_flux(const double (&psi)[M][N], double (&F)[N])
 void compute_radiative_flux(const Eigen::Ref<Eigen::MatrixXd> psi, 
                             Eigen::Ref<Eigen::VectorXd> F)
 {
-   for (int i = 0; i < N; i++)
+   int _M = psi.rows(), _N = psi.cols();
+
+   for (int i = 0; i < _N; i++)
    {
       F[i] = 0.;
-      for (int j = 0.; j < M; j++)
+      for (int j = 0.; j < _M; j++)
       {
          F[i] += G_x[j] * G_w[j] * psi(j,i);
       }
@@ -105,11 +121,6 @@ void compute_radiative_flux(const Eigen::Ref<Eigen::MatrixXd> psi,
 }
 
 
-// double compute_balance(const double (&ends)[M][N][2], 
-//                        const double (&phi)[N],
-//                        const double (&rho_vec)[N],
-//                        const double (&kappa_vec)[N],
-//                        const double (&temperature)[N])
 double compute_balance(const Eigen::Tensor<double, 3> ends, 
                        const Eigen::Ref<Eigen::VectorXd> phi,
                        const Eigen::Ref<Eigen::VectorXd> rho_vec,
@@ -124,7 +135,7 @@ double compute_balance(const Eigen::Tensor<double, 3> ends,
           _abs = 0.,
           _src = 0.,
           _bal = 0.;
-   
+
    for (int i = 0; i < M; i++)
    {
       mu = G_x[i];
@@ -156,76 +167,21 @@ double compute_balance(const Eigen::Tensor<double, 3> ends,
    return _bal;
 }
 
-/*
-Functions to go in lapack library
-*/
-
-
-// double determinant(const double (&matrix)[2][2], int size) {
-//    if (size == 1) {
-//       return matrix[0][0];
-//    }
-//    double det = 0;
-//    for (size_t j = 0; j < size; ++j) {
-//       double sub_matrix[2][2];
-//       for (size_t i = 1; i < size; ++i) {
-//          for (size_t k = 0; k < size - 1; ++k) {
-//                if (k < j) {
-//                   sub_matrix[i - 1][k] = matrix[i][k];
-//                }
-//                else {
-//                   sub_matrix[i - 1][k] = matrix[i][k + 1];
-//                }
-//          }
-//       }
-//       double sub_det = determinant(sub_matrix, size - 1);
-//       double sign = ((j % 2) == 0) ? 1 : -1;
-//       det += sign * matrix[0][j] * sub_det;
-//    }
-//    return det;
-// }
-
-
-// // Function to compute the inverse matrix of a square matrix
-// void inverseMatrix(const double (&matrix)[2][2], const int n, double (&inverse)[2][2]) {
-//    double det = determinant(matrix, n);
-//    if (abs(det) < 1e-10)
-//    {
-//       std::cout << "Cannot divide by 0.\n";
-//       assert(false);
-//    }
-//    inverse[0][0] = matrix[1][1] / det;
-//    inverse[0][1] = - matrix[0][1] / det;
-//    inverse[1][0] = - matrix[1][0] / det;
-//    inverse[1][1] = matrix[0][0] / det;
-// }
-
-// // Function to multiply a matrix by a vector
-// void matrixVectorMultiply(const double (&matrix)[2][2], const int n, const double (&vector)[2], double (&result)[2]) {
-//    for (int i = 0; i < n; i++) {
-//       double sum = 0;
-//       for (int j = 0; j < n; j++) {
-//          sum += matrix[i][j] * vector[j];
-//       }
-//       result[i] = sum;
-//    }
-// }
 
 int main()
 {
-   Eigen::VectorXd F(N);                 // Radiative flux
-   Eigen::VectorXd phi(N);               // angle-integrated intensity
-   Eigen::MatrixXd psi(M,N);       // solution, angular intensity
+   VectorXd F(N);                 // Radiative flux
+   VectorXd phi(N);               // angle-integrated intensity
+   MatrixXd psi(M,N);       // solution, angular intensity
    Eigen::Tensor<double, 3> ends(M,N,2);   // These are the nodes psi_{i,L}([0]) and psi_{i,R}([1])
    Eigen::Tensor<double, 3> prev_ends(M,N,2);
    Eigen::Tensor<double, 3> half_ends(M,N,2); // For BDF2 time stepping
-   Eigen::VectorXd rho_vec(N), kappa_vec(N), temperature(N);
-   Eigen::VectorXd x(N);         // mesh
+   VectorXd rho_vec(N), kappa_vec(N), temperature(N);
+   VectorXd x(N);         // mesh
+
+   shape(ends);
 
    // Fill constants
-   // std::fill_n(rho_vec, N, rho);
-   // std::fill_n(kappa_vec, N, kappa);
-   // std::fill_n(temperature, N, T);
    rho_vec.setConstant(rho);
    kappa_vec.setConstant(kappa);
    temperature.setConstant(T);
@@ -243,13 +199,12 @@ int main()
    double half_local_bdry = 0.;     // This will be given to us by the upwinding on the previous cell.
    double local_bdry_prev_it = 0.;  // This is also given by the upwinding on the previous cell at the previous timestep.
    double psi_half = 0.;
-   Eigen::MatrixXd _mat(2,2), _mat_inverse(2,2);
-   Eigen::VectorXd _rhs(2), _res(2);
+   MatrixXd _mat(2,2), _mat_inverse(2,2);
+   VectorXd _rhs(2), _res(2);
 
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
       cout << "============= Timestep: " << _it << " =============" << endl;
-      // std::copy(&ends[0][0][0], &ends[0][0][0]+M*N*2, &prev_ends[0][0][0]);
       prev_ends = ends;
 
       // Iterate over scattered direction (value given by gaussian quadrature)
