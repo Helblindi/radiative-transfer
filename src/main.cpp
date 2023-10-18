@@ -1,15 +1,18 @@
 #include <iostream>
 #include <cmath>
-#include <vector>
+#include <vector> // Still need for matplotlib plotting
+#include <Eigen/Dense>
+#include <unsupported/Eigen/CXX11/Tensor>
 
 #include "matplotlibcpp.h"
 #include "compile_time_vals.h"
-// #include "lapack.h"
 
 using namespace std;
 using namespace rt;
 namespace plt = matplotlibcpp;
 
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 /* Function to display the parameters used */
 void display_input_quantities()
@@ -73,40 +76,45 @@ void display_input_quantities()
 }
 
 
-template <int M, int N>
-void compute_angle_integrated_density(const double (&psi)[M][N], double (&phi)[N])
+void compute_angle_integrated_density(const Eigen::MatrixXd psi, 
+                                      Eigen::Ref<Eigen::VectorXd> phi)
 {
    for (int i = 0; i < N; i++)
    {
       phi[i] = 0.;
       for (int j = 0.; j < M; j++)
       {
-         phi[i] += G_w[j] * psi[j][i];
+         phi[i] += G_w[j] * psi(j,i);
       }
    }
 }
 
 
-template <int M, int N>
-void compute_radiative_flux(const double (&psi)[M][N], double (&F)[N])
+// void compute_radiative_flux(const double (&psi)[M][N], double (&F)[N])
+void compute_radiative_flux(const Eigen::Ref<Eigen::MatrixXd> psi, 
+                            Eigen::Ref<Eigen::VectorXd> F)
 {
    for (int i = 0; i < N; i++)
    {
       F[i] = 0.;
       for (int j = 0.; j < M; j++)
       {
-         F[i] += G_x[j] * G_w[j] * psi[j][i];
+         F[i] += G_x[j] * G_w[j] * psi(j,i);
       }
    }
 }
 
 
-template <int M, int N>
-double compute_balance(const double (&ends)[M][N][2], 
-                       const double (&phi)[N],
-                       const double (&rho_vec)[N],
-                       const double (&kappa_vec)[N],
-                       const double (&temperature)[N])
+// double compute_balance(const double (&ends)[M][N][2], 
+//                        const double (&phi)[N],
+//                        const double (&rho_vec)[N],
+//                        const double (&kappa_vec)[N],
+//                        const double (&temperature)[N])
+double compute_balance(const Eigen::Tensor<double, 3> ends, 
+                       const Eigen::Ref<Eigen::VectorXd> phi,
+                       const Eigen::Ref<Eigen::VectorXd> rho_vec,
+                       const Eigen::Ref<Eigen::VectorXd> kappa_vec,
+                       const Eigen::Ref<Eigen::VectorXd> temperature)
 {
    double mu = 0.,
           j_half_minus = 0., 
@@ -123,13 +131,13 @@ double compute_balance(const double (&ends)[M][N][2],
 
       if (mu < 0.)
       {
-         j_half_minus -= ends[i][0][0] * mu * G_w[i]; // psi_1/2
-         jN_half_minus -= ends[i][N-1][1] * mu * G_w[i]; // psi_N+1/2
+         j_half_minus -= ends(i,0,0) * mu * G_w[i]; // psi_1/2
+         jN_half_minus -= ends(i,N-1,1) * mu * G_w[i]; // psi_N+1/2
       }
       else 
       {
-         j_half_plus += ends[i][0][0] * mu * G_w[i]; // psi_1/2
-         jN_half_plus += ends[i][N-1][1] * mu * G_w[i]; // psi_N+1/2
+         j_half_plus += ends(i,0,0) * mu * G_w[i]; // psi_1/2
+         jN_half_plus += ends(i,N-1,1) * mu * G_w[i]; // psi_N+1/2
       }
    }
 
@@ -153,71 +161,74 @@ Functions to go in lapack library
 */
 
 
-double determinant(const double (&matrix)[2][2], int size) {
-   if (size == 1) {
-      return matrix[0][0];
-   }
-   double det = 0;
-   for (size_t j = 0; j < size; ++j) {
-      double sub_matrix[2][2];
-      for (size_t i = 1; i < size; ++i) {
-         for (size_t k = 0; k < size - 1; ++k) {
-               if (k < j) {
-                  sub_matrix[i - 1][k] = matrix[i][k];
-               }
-               else {
-                  sub_matrix[i - 1][k] = matrix[i][k + 1];
-               }
-         }
-      }
-      double sub_det = determinant(sub_matrix, size - 1);
-      double sign = ((j % 2) == 0) ? 1 : -1;
-      det += sign * matrix[0][j] * sub_det;
-   }
-   return det;
-}
+// double determinant(const double (&matrix)[2][2], int size) {
+//    if (size == 1) {
+//       return matrix[0][0];
+//    }
+//    double det = 0;
+//    for (size_t j = 0; j < size; ++j) {
+//       double sub_matrix[2][2];
+//       for (size_t i = 1; i < size; ++i) {
+//          for (size_t k = 0; k < size - 1; ++k) {
+//                if (k < j) {
+//                   sub_matrix[i - 1][k] = matrix[i][k];
+//                }
+//                else {
+//                   sub_matrix[i - 1][k] = matrix[i][k + 1];
+//                }
+//          }
+//       }
+//       double sub_det = determinant(sub_matrix, size - 1);
+//       double sign = ((j % 2) == 0) ? 1 : -1;
+//       det += sign * matrix[0][j] * sub_det;
+//    }
+//    return det;
+// }
 
 
-// Function to compute the inverse matrix of a square matrix
-void inverseMatrix(const double (&matrix)[2][2], const int n, double (&inverse)[2][2]) {
-   double det = determinant(matrix, n);
-   if (abs(det) < 1e-10)
-   {
-      std::cout << "Cannot divide by 0.\n";
-      assert(false);
-   }
-   inverse[0][0] = matrix[1][1] / det;
-   inverse[0][1] = - matrix[0][1] / det;
-   inverse[1][0] = - matrix[1][0] / det;
-   inverse[1][1] = matrix[0][0] / det;
-}
+// // Function to compute the inverse matrix of a square matrix
+// void inverseMatrix(const double (&matrix)[2][2], const int n, double (&inverse)[2][2]) {
+//    double det = determinant(matrix, n);
+//    if (abs(det) < 1e-10)
+//    {
+//       std::cout << "Cannot divide by 0.\n";
+//       assert(false);
+//    }
+//    inverse[0][0] = matrix[1][1] / det;
+//    inverse[0][1] = - matrix[0][1] / det;
+//    inverse[1][0] = - matrix[1][0] / det;
+//    inverse[1][1] = matrix[0][0] / det;
+// }
 
-// Function to multiply a matrix by a vector
-void matrixVectorMultiply(const double (&matrix)[2][2], const int n, const double (&vector)[2], double (&result)[2]) {
-   for (int i = 0; i < n; i++) {
-      double sum = 0;
-      for (int j = 0; j < n; j++) {
-         sum += matrix[i][j] * vector[j];
-      }
-      result[i] = sum;
-   }
-}
+// // Function to multiply a matrix by a vector
+// void matrixVectorMultiply(const double (&matrix)[2][2], const int n, const double (&vector)[2], double (&result)[2]) {
+//    for (int i = 0; i < n; i++) {
+//       double sum = 0;
+//       for (int j = 0; j < n; j++) {
+//          sum += matrix[i][j] * vector[j];
+//       }
+//       result[i] = sum;
+//    }
+// }
 
 int main()
 {
-   double F[N];                 // Radiative flux
-   double phi[N];               // angle-integrated intensity
-   double psi[M][N] = {};       // solution
-   double ends[M][N][2] = {};   // These are the nodes psi_{i,L}([0]) and psi_{i,R}([1])
-   double prev_ends[M][N][2] = {};
-   double half_ends[M][N][2] = {}; // For BDF2 time stepping
-   double rho_vec[N], kappa_vec[N], temperature[N];
-   vector<double> x(N);         // mesh
+   Eigen::VectorXd F(N);                 // Radiative flux
+   Eigen::VectorXd phi(N);               // angle-integrated intensity
+   Eigen::MatrixXd psi(M,N);       // solution, angular intensity
+   Eigen::Tensor<double, 3> ends(M,N,2);   // These are the nodes psi_{i,L}([0]) and psi_{i,R}([1])
+   Eigen::Tensor<double, 3> prev_ends(M,N,2);
+   Eigen::Tensor<double, 3> half_ends(M,N,2); // For BDF2 time stepping
+   Eigen::VectorXd rho_vec(N), kappa_vec(N), temperature(N);
+   Eigen::VectorXd x(N);         // mesh
 
    // Fill constants
-   std::fill_n(rho_vec, N, rho);
-   std::fill_n(kappa_vec, N, kappa);
-   std::fill_n(temperature, N, T);
+   // std::fill_n(rho_vec, N, rho);
+   // std::fill_n(kappa_vec, N, kappa);
+   // std::fill_n(temperature, N, T);
+   rho_vec.setConstant(rho);
+   kappa_vec.setConstant(kappa);
+   temperature.setConstant(T);
 
    // Initialize the mesh
    for (int i = 0; i < N; i++)
@@ -232,12 +243,14 @@ int main()
    double half_local_bdry = 0.;     // This will be given to us by the upwinding on the previous cell.
    double local_bdry_prev_it = 0.;  // This is also given by the upwinding on the previous cell at the previous timestep.
    double psi_half = 0.;
-   double _mat[2][2], _mat_inverse[2][2], _rhs[2], _res[2];
+   Eigen::MatrixXd _mat(2,2), _mat_inverse(2,2);
+   Eigen::VectorXd _rhs(2), _res(2);
 
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
       cout << "============= Timestep: " << _it << " =============" << endl;
-      std::copy(&ends[0][0][0], &ends[0][0][0]+M*N*2, &prev_ends[0][0][0]);
+      // std::copy(&ends[0][0][0], &ends[0][0][0]+M*N*2, &prev_ends[0][0][0]);
+      prev_ends = ends;
 
       // Iterate over scattered direction (value given by gaussian quadrature)
       for (int i = 0; i < M; i++)
@@ -293,7 +306,7 @@ int main()
                   int diff = i - (M / 2); // Difference from center index
                   int m_neg = (M / 2) - 1 - diff; // Move in opposite direction to yield index of -mu [-c, -b, -a, a, b, c]
 
-                  local_bdry = ends[m_neg][0][0];
+                  local_bdry = ends(m_neg,0,0);
                   break;
                }
                default:
@@ -321,26 +334,28 @@ int main()
                      double const_C = c*dt*rho_vec[cell_j] * kappa_vec[cell_j] * a * c / (4 * M_PI);
 
                      double _temp_val = (const_A * dx - const_B) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_B / 2.;
-                     _mat[1][0] = - const_B / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_B / 2.;
+                     _mat(1,0) = - const_B / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_C * dx * pow(temperature[cell_j], 4) / 2.;
-                     _rhs[0] = _temp_val + dx * ends[i][cell_j][0] / 2.;
-                     _rhs[1] = _temp_val - (const_B * local_bdry) + dx * ends[i][cell_j][1] / 2.;
+                     _rhs(0) = _temp_val + dx * ends(i,cell_j,0) / 2.;
+                     _rhs(1) = _temp_val - (const_B * local_bdry) + dx * ends(i,cell_j,1) / 2.;
 
                      // Invert matrix
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][cell_j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,cell_j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][cell_j][0] = _res[0];
-                     ends[i][cell_j][1] = _res[1];
+                     ends(i,cell_j,0) = _res[0];
+                     ends(i,cell_j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[0];
@@ -356,22 +371,24 @@ int main()
                      double const_D = c * dt * a * c / (8 * M_PI);
 
                      double _temp_val = (const_B * dx - const_A) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_A / 2.;
-                     _mat[1][0] = - const_A / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_A / 2.;
+                     _mat(1,0) = - const_A / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_D * dx * rho_vec[cell_j] * kappa_vec[cell_j] * pow(temperature[cell_j], 4) / 2.;
 
-                     _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][0] - (const_A / 2.) * ends[i][cell_j][1];
-                     _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][1] + (const_A / 2.) * ends[i][cell_j][0] - const_A * (half_local_bdry + local_bdry_prev_it);
+                     _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,0) - (const_A / 2.) * ends(i,cell_j,1);
+                     _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,1) + (const_A / 2.) * ends(i,cell_j,0) - const_A * (half_local_bdry + local_bdry_prev_it);
 
                      // Solve CN
-                     inverseMatrix(_mat, 2, _mat_inverse);
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
-                     half_ends[i][cell_j][0] = _res[0];
-                     half_ends[i][cell_j][1] = _res[1];
+                     half_ends(i,cell_j,0) = _res[0];
+                     half_ends(i,cell_j,1) = _res[1];
 
                      // BDF Step
                      const_A = 1. + (c * dt * rho_vec[cell_j] * kappa_vec[cell_j] / 12.);
@@ -381,34 +398,36 @@ int main()
                      double const_E = c * dt * a * c / (8. * M_PI);
 
                      _temp_val = (const_A * dx - const_B) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_B / 2.;
-                     _mat[1][0] = - const_B / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_B / 2.;
+                     _mat(1,0) = - const_B / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = (const_E * dx * rho_vec[cell_j] * kappa_vec[cell_j] / 2.) * pow(temperature[cell_j], 4);
-                     _rhs[0] = _temp_val + ((const_C * dx + 4. * const_B) / 2.) * half_ends[i][cell_j][0] - 2. * const_B * half_ends[i][cell_j][1];
-                     _rhs[0] += ((const_B - const_D * dx) / 2.) * ends[i][cell_j][0] - (const_B / 2.) * ends[i][cell_j][1];
-                     _rhs[1] = _temp_val + ((const_C * dx + 4. * const_B) / 2.) * half_ends[i][cell_j][1] + 2. * const_B * half_ends[i][cell_j][0];
-                     _rhs[1] += ((const_B - const_D * dx) / 2.) * ends[i][cell_j][1] + (const_B / 2.) * ends[i][cell_j][0];
+                     _rhs[0] = _temp_val + ((const_C * dx + 4. * const_B) / 2.) * half_ends(i,cell_j,0) - 2. * const_B * half_ends(i,cell_j,1);
+                     _rhs[0] += ((const_B - const_D * dx) / 2.) * ends(i,cell_j,0) - (const_B / 2.) * ends(i,cell_j,1);
+                     _rhs[1] = _temp_val + ((const_C * dx + 4. * const_B) / 2.) * half_ends(i,cell_j,1) + 2. * const_B * half_ends(i,cell_j,0);
+                     _rhs[1] += ((const_B - const_D * dx) / 2.) * ends(i,cell_j,1) + (const_B / 2.) * ends(i,cell_j,0);
                      _rhs[1] -= const_B * (local_bdry + local_bdry_prev_it + 4. *  half_local_bdry);
 
                      // Invert matrix
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][cell_j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,cell_j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][cell_j][0] = _res[0];
-                     ends[i][cell_j][1] = _res[1];
+                     ends(i,cell_j,0) = _res[0];
+                     ends(i,cell_j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[0];
-                     half_local_bdry = half_ends[i][cell_j][0];
-                     local_bdry_prev_it = prev_ends[i][cell_j][0];
+                     half_local_bdry = half_ends(i,cell_j,0);
+                     local_bdry_prev_it = prev_ends(i,cell_j,0);
                      
                      break;
                   } // End BDF2 case
@@ -421,27 +440,29 @@ int main()
                      double const_D = c * dt * a * c / (8 * M_PI);
 
                      double _temp_val = (const_B * dx - const_A) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_A / 2.;
-                     _mat[1][0] = - const_A / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_A / 2.;
+                     _mat(1,0) = - const_A / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_D * dx * rho_vec[cell_j] * kappa_vec[cell_j] * pow(temperature[cell_j], 4) / 2.;
 
-                     _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][0] - (const_A / 2.) * ends[i][cell_j][1];
-                     _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][1] + (const_A / 2.) * ends[i][cell_j][0] - const_A * (half_local_bdry + local_bdry_prev_it);
+                     _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,0) - (const_A / 2.) * ends(i,cell_j,1);
+                     _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,1) + (const_A / 2.) * ends(i,cell_j,0) - const_A * (half_local_bdry + local_bdry_prev_it);
 
                      // Invert matrix
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][cell_j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,cell_j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][cell_j][0] = _res[0];
-                     ends[i][cell_j][1] = _res[1];
+                     ends(i,cell_j,0) = _res[0];
+                     ends(i,cell_j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[0];
@@ -459,25 +480,27 @@ int main()
                         double const_D = c * dt * a * c / (8 * M_PI);
 
                         double _temp_val = (const_B * dx - const_A) / 2.;
-                        _mat[0][0] = _temp_val; 
-                        _mat[0][1] = const_A / 2.;
-                        _mat[1][0] = - const_A / 2.;
-                        _mat[1][1] = _temp_val;
+                        _mat(0,0) = _temp_val; 
+                        _mat(0,1) = const_A / 2.;
+                        _mat(1,0) = - const_A / 2.;
+                        _mat(1,1) = _temp_val;
 
                         _temp_val = const_D * dx * rho_vec[cell_j] * kappa_vec[cell_j] * pow(temperature[cell_j], 4) / 2.;
 
-                        _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][0] - (const_A / 2.) * ends[i][cell_j][1];
-                        _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends[i][cell_j][1] + (const_A / 2.) * ends[i][cell_j][0] - const_A * (half_local_bdry + local_bdry_prev_it);
+                        _rhs[0] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,0) - (const_A / 2.) * ends(i,cell_j,1);
+                        _rhs[1] = _temp_val + ((const_C * dx + const_A) / 2.) * ends(i,cell_j,1) + (const_A / 2.) * ends(i,cell_j,0) - const_A * (half_local_bdry + local_bdry_prev_it);
 
                         // Solve CN
-                        inverseMatrix(_mat, 2, _mat_inverse);
-                        matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        // inverseMatrix(_mat, 2, _mat_inverse);
+                        _mat_inverse = _mat.inverse();
+                        // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        _res = _mat_inverse * _rhs;
 
-                        half_ends[i][cell_j][0] = _res[0];
-                        half_ends[i][cell_j][1] = _res[1];
+                        half_ends(i,cell_j,0) = _res[0];
+                        half_ends(i,cell_j,1) = _res[1];
 
-                        half_local_bdry = half_ends[i][cell_j][0];
-                        local_bdry_prev_it = prev_ends[i][cell_j][0];
+                        half_local_bdry = half_ends(i,cell_j,0);
+                        local_bdry_prev_it = prev_ends(i,cell_j,0);
                      }
                      else
                      {
@@ -489,34 +512,36 @@ int main()
                         double const_E = c * dt * a * c / (8. * M_PI);
 
                         double _temp_val = (const_A * dx - const_B) / 2.;
-                        _mat[0][0] = _temp_val; 
-                        _mat[0][1] = const_B / 2.;
-                        _mat[1][0] = - const_B / 2.;
-                        _mat[1][1] = _temp_val;
+                        _mat(0,0) = _temp_val; 
+                        _mat(0,1) = const_B / 2.;
+                        _mat(1,0) = - const_B / 2.;
+                        _mat(1,1) = _temp_val;
 
                         _temp_val = (const_E * dx * rho_vec[cell_j] * kappa_vec[cell_j] / 2.) * pow(temperature[cell_j], 4);
-                        _rhs[0] = _temp_val + ((const_C * dx + (const_B / 4.)) / 2.) * half_ends[i][cell_j][0] - (const_B / 8.) * half_ends[i][cell_j][1];
-                        _rhs[0] += (((const_B / 4.) - const_D * dx) / 2.) * ends[i][cell_j][0] - (const_B / 8.) * ends[i][cell_j][1];
-                        _rhs[1] = _temp_val + ((const_C * dx + (const_B / 4.)) / 2.) * half_ends[i][cell_j][1] + (const_B / 8.) * half_ends[i][cell_j][0];
-                        _rhs[1] += (((const_B / 4.) - const_D * dx) / 2.) * ends[i][cell_j][1] + (const_B / 8.) * ends[i][cell_j][0];
+                        _rhs[0] = _temp_val + ((const_C * dx + (const_B / 4.)) / 2.) * half_ends(i,cell_j,0) - (const_B / 8.) * half_ends(i,cell_j,1);
+                        _rhs[0] += (((const_B / 4.) - const_D * dx) / 2.) * ends(i,cell_j,0) - (const_B / 8.) * ends(i,cell_j,1);
+                        _rhs[1] = _temp_val + ((const_C * dx + (const_B / 4.)) / 2.) * half_ends(i,cell_j,1) + (const_B / 8.) * half_ends(i,cell_j,0);
+                        _rhs[1] += (((const_B / 4.) - const_D * dx) / 2.) * ends(i,cell_j,1) + (const_B / 8.) * ends(i,cell_j,0);
                         _rhs[1] -= const_B * (local_bdry + (local_bdry_prev_it / 4.) + (half_local_bdry / 4.));
 
                         // Invert matrix
-                        inverseMatrix(_mat, 2, _mat_inverse);
+                        // inverseMatrix(_mat, 2, _mat_inverse);
+                        _mat_inverse = _mat.inverse();
 
                         // Solve 
-                        matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        _res = _mat_inverse * _rhs;
 
                         // put the average of val and local boundary here
-                        psi[i][cell_j] = 0.5*(_res[0] + _res[1]);
+                        psi(i,cell_j) = 0.5*(_res[0] + _res[1]);
 
-                        ends[i][cell_j][0] = _res[0];
-                        ends[i][cell_j][1] = _res[1];
+                        ends(i,cell_j,0) = _res[0];
+                        ends(i,cell_j,1) = _res[1];
 
                         // Set local boundary for next cell iteration
                         local_bdry = _res[0];
-                        half_local_bdry = half_ends[i][cell_j][0];
-                        local_bdry_prev_it = prev_ends[i][cell_j][0];
+                        half_local_bdry = half_ends(i,cell_j,0);
+                        local_bdry_prev_it = prev_ends(i,cell_j,0);
                      }
                      
                      break;
@@ -539,26 +564,28 @@ int main()
                      double const_C = c*dt*rho_vec[j] * kappa_vec[j] * a * c / (4 * M_PI);
 
                      double _temp_val = (const_A * dx + const_B) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_B / 2.;
-                     _mat[1][0] = - const_B / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_B / 2.;
+                     _mat(1,0) = - const_B / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_C * dx * pow(temperature[j], 4) / 2.;
-                     _rhs[0] = _temp_val + (const_B * local_bdry) + dx * ends[i][j][0] / 2.;
-                     _rhs[1] = _temp_val + dx * ends[i][j][1] / 2.;
+                     _rhs[0] = _temp_val + (const_B * local_bdry) + dx * ends(i,j,0) / 2.;
+                     _rhs[1] = _temp_val + dx * ends(i,j,1) / 2.;
 
                      // Invert matrix
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][j][0] = _res[0];
-                     ends[i][j][1] = _res[1];
+                     ends(i,j,0) = _res[0];
+                     ends(i,j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[1];
@@ -574,22 +601,24 @@ int main()
                      double const_D = c * dt * a * c / (8 * M_PI);
 
                      double _temp_val = (const_B * dx + const_A) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_A / 2.;
-                     _mat[1][0] = - const_A / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_A / 2.;
+                     _mat(1,0) = - const_A / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_D * dx * rho_vec[j] * kappa_vec[j] * pow(temperature[j], 4) / 2.;
 
-                     _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][0] - (const_A / 2.) * ends[i][j][1] + const_A * (half_local_bdry + local_bdry_prev_it);
-                     _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][1] + (const_A / 2.) * ends[i][j][0];
+                     _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,0) - (const_A / 2.) * ends(i,j,1) + const_A * (half_local_bdry + local_bdry_prev_it);
+                     _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,1) + (const_A / 2.) * ends(i,j,0);
 
                      // Solve CN
-                     inverseMatrix(_mat, 2, _mat_inverse);
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
-                     half_ends[i][j][0] = _res[0];
-                     half_ends[i][j][1] = _res[1];
+                     half_ends(i,j,0) = _res[0];
+                     half_ends(i,j,1) = _res[1];
 
                      // BDF Step
                      const_A = 1. + (c * dt * rho_vec[j] * kappa_vec[j] / 12.);
@@ -599,34 +628,36 @@ int main()
                      double const_E = c * dt * a * c / (8. * M_PI);
 
                      _temp_val = (const_A * dx + const_B) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_B / 2.;
-                     _mat[1][0] = - const_B / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_B / 2.;
+                     _mat(1,0) = - const_B / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = (const_E * dx * rho_vec[j] * kappa_vec[j] / 2.) * pow(temperature[j], 4);
-                     _rhs[0] = _temp_val + ((const_C * dx - 4. * const_B) / 2.) * half_ends[i][j][0] - 2. * const_B * half_ends[i][j][1];
-                     _rhs[0] += -1. * ((const_B + const_D * dx) / 2.) * ends[i][j][0] - (const_B / 2.) * ends[i][j][1];
+                     _rhs[0] = _temp_val + ((const_C * dx - 4. * const_B) / 2.) * half_ends(i,j,0) - 2. * const_B * half_ends(i,j,1);
+                     _rhs[0] += -1. * ((const_B + const_D * dx) / 2.) * ends(i,j,0) - (const_B / 2.) * ends(i,j,1);
                      _rhs[0] += const_B * (local_bdry + local_bdry_prev_it + 4. * half_local_bdry);
-                     _rhs[1] = _temp_val + ((const_C * dx - 4. * const_B) / 2.) * half_ends[i][j][1] + 2. * const_B * half_ends[i][j][0];
-                     _rhs[1] += -1. * ((const_B + const_D * dx) / 2.) * ends[i][j][1] + (const_B / 2.) * ends[i][j][0];
+                     _rhs[1] = _temp_val + ((const_C * dx - 4. * const_B) / 2.) * half_ends(i,j,1) + 2. * const_B * half_ends(i,j,0);
+                     _rhs[1] += -1. * ((const_B + const_D * dx) / 2.) * ends(i,j,1) + (const_B / 2.) * ends(i,j,0);
 
                      // Solve BDF2
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][j][0] = _res[0];
-                     ends[i][j][1] = _res[1];
+                     ends(i,j,0) = _res[0];
+                     ends(i,j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[1];
-                     half_local_bdry = half_ends[i][j][1];
-                     local_bdry_prev_it = prev_ends[i][j][1];
+                     half_local_bdry = half_ends(i,j,1);
+                     local_bdry_prev_it = prev_ends(i,j,1);
 
                      break;
                   } // End BDF2 case
@@ -639,27 +670,29 @@ int main()
                      double const_D = c * dt * a * c / (8 * M_PI);
 
                      double _temp_val = (const_B * dx + const_A) / 2.;
-                     _mat[0][0] = _temp_val; 
-                     _mat[0][1] = const_A / 2.;
-                     _mat[1][0] = - const_A / 2.;
-                     _mat[1][1] = _temp_val;
+                     _mat(0,0) = _temp_val; 
+                     _mat(0,1) = const_A / 2.;
+                     _mat(1,0) = - const_A / 2.;
+                     _mat(1,1) = _temp_val;
 
                      _temp_val = const_D * dx * rho_vec[j] * kappa_vec[j] * pow(temperature[j], 4) / 2.;
 
-                     _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][0] - (const_A / 2.) * ends[i][j][1] + const_A * (half_local_bdry + local_bdry_prev_it);
-                     _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][1] + (const_A / 2.) * ends[i][j][0];
+                     _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,0) - (const_A / 2.) * ends(i,j,1) + const_A * (half_local_bdry + local_bdry_prev_it);
+                     _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,1) + (const_A / 2.) * ends(i,j,0);
 
                      // Solve matrix
-                     inverseMatrix(_mat, 2, _mat_inverse);
+                     // inverseMatrix(_mat, 2, _mat_inverse);
+                     _mat_inverse = _mat.inverse();
 
                      // Solve 
-                     matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                     _res = _mat_inverse * _rhs;
 
                      // put the average of val and local boundary here
-                     psi[i][j] = 0.5*(_res[0] + _res[1]);
+                     psi(i,j) = 0.5*(_res[0] + _res[1]);
 
-                     ends[i][j][0] = _res[0];
-                     ends[i][j][1] = _res[1];
+                     ends(i,j,0) = _res[0];
+                     ends(i,j,1) = _res[1];
 
                      // Set local boundary for next cell iteration
                      local_bdry = _res[1];
@@ -677,25 +710,27 @@ int main()
                         double const_D = c * dt * a * c / (8 * M_PI);
 
                         double _temp_val = (const_B * dx + const_A) / 2.;
-                        _mat[0][0] = _temp_val; 
-                        _mat[0][1] = const_A / 2.;
-                        _mat[1][0] = - const_A / 2.;
-                        _mat[1][1] = _temp_val;
+                        _mat(0,0) = _temp_val; 
+                        _mat(0,1) = const_A / 2.;
+                        _mat(1,0) = - const_A / 2.;
+                        _mat(1,1) = _temp_val;
 
                         _temp_val = const_D * dx * rho_vec[j] * kappa_vec[j] * pow(temperature[j], 4) / 2.;
 
-                        _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][0] - (const_A / 2.) * ends[i][j][1] + const_A * (half_local_bdry + local_bdry_prev_it);
-                        _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends[i][j][1] + (const_A / 2.) * ends[i][j][0];
+                        _rhs[0] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,0) - (const_A / 2.) * ends(i,j,1) + const_A * (half_local_bdry + local_bdry_prev_it);
+                        _rhs[1] = _temp_val + ((const_C * dx - const_A) / 2.) * ends(i,j,1) + (const_A / 2.) * ends(i,j,0);
 
                         // Solve CN
-                        inverseMatrix(_mat, 2, _mat_inverse);
-                        matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        // inverseMatrix(_mat, 2, _mat_inverse);
+                        _mat_inverse = _mat.inverse();
+                        // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        _res = _mat_inverse * _rhs;
 
-                        half_ends[i][j][0] = _res[0];
-                        half_ends[i][j][1] = _res[1];
+                        half_ends(i,j,0) = _res[0];
+                        half_ends(i,j,1) = _res[1];
 
-                        half_local_bdry = half_ends[i][j][1];
-                        local_bdry_prev_it = prev_ends[i][j][1];
+                        half_local_bdry = half_ends(i,j,1);
+                        local_bdry_prev_it = prev_ends(i,j,1);
                      }
                      else
                      {
@@ -707,34 +742,36 @@ int main()
                         double const_E = c * dt * a * c / (8. * M_PI);
 
                         double _temp_val = (const_A * dx + const_B) / 2.;
-                        _mat[0][0] = _temp_val; 
-                        _mat[0][1] = const_B / 2.;
-                        _mat[1][0] = - const_B / 2.;
-                        _mat[1][1] = _temp_val;
+                        _mat(0,0) = _temp_val; 
+                        _mat(0,1) = const_B / 2.;
+                        _mat(1,0) = - const_B / 2.;
+                        _mat(1,1) = _temp_val;
 
                         _temp_val = (const_E * dx * rho_vec[j] * kappa_vec[j] / 2.) * pow(temperature[j], 4);
-                        _rhs[0] = _temp_val + ((const_C * dx - const_B/4.) / 2.) * half_ends[i][j][0] - (const_B / 8.) * half_ends[i][j][1];
-                        _rhs[0] += -1. * (((const_B / 4.) + const_D * dx) / 2.) * ends[i][j][0] - (const_B / 8.) * ends[i][j][1];
+                        _rhs[0] = _temp_val + ((const_C * dx - const_B/4.) / 2.) * half_ends(i,j,0) - (const_B / 8.) * half_ends(i,j,1);
+                        _rhs[0] += -1. * (((const_B / 4.) + const_D * dx) / 2.) * ends(i,j,0) - (const_B / 8.) * ends(i,j,1);
                         _rhs[0] += const_B * (local_bdry + (local_bdry_prev_it / 4.) + (half_local_bdry / 4.));
-                        _rhs[1] = _temp_val + ((const_C * dx - (const_B / 4.)) / 2.) * half_ends[i][j][1] + (const_B / 8.) * half_ends[i][j][0];
-                        _rhs[1] += -1. * (((const_B / 4.) + const_D * dx) / 2.) * ends[i][j][1] + (const_B / 8.) * ends[i][j][0];
+                        _rhs[1] = _temp_val + ((const_C * dx - (const_B / 4.)) / 2.) * half_ends(i,j,1) + (const_B / 8.) * half_ends(i,j,0);
+                        _rhs[1] += -1. * (((const_B / 4.) + const_D * dx) / 2.) * ends(i,j,1) + (const_B / 8.) * ends(i,j,0);
 
                         // Solve BDF2
-                        inverseMatrix(_mat, 2, _mat_inverse);
+                        // inverseMatrix(_mat, 2, _mat_inverse);
+                        _mat_inverse = _mat.inverse();
 
                         // Solve 
-                        matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
+                        _res = _mat_inverse * _rhs;
 
                         // put the average of val and local boundary here
-                        psi[i][j] = 0.5*(_res[0] + _res[1]);
+                        psi(i,j) = 0.5*(_res[0] + _res[1]);
 
-                        ends[i][j][0] = _res[0];
-                        ends[i][j][1] = _res[1];
+                        ends(i,j,0) = _res[0];
+                        ends(i,j,1) = _res[1];
 
                         // Set local boundary for next cell iteration
                         local_bdry = _res[1];
-                        half_local_bdry = half_ends[i][j][1];
-                        local_bdry_prev_it = prev_ends[i][j][1];
+                        half_local_bdry = half_ends(i,j,1);
+                        local_bdry_prev_it = prev_ends(i,j,1);
                      }
 
                      break;
@@ -749,11 +786,11 @@ int main()
          }
          if (mu < 0)
          {
-            cout << "Final phi for mu " << mu << " is: " << ends[i][0][0] << endl;
+            cout << "Final phi for mu " << mu << " is: " << ends(i,0,0) << endl;
          }
          else
          {
-            cout << "Final phi for mu " << mu << " is: " << ends[i][N-1][1] << endl;
+            cout << "Final phi for mu " << mu << " is: " << ends(i,N-1,1) << endl;
          }
          cout << "Corresponding source condition was: " <<  psi_source[i] << endl;
       } // End scattered direction loop
@@ -782,16 +819,17 @@ int main()
    // Create vectors for python to use
    vector<double> y_py(N);
    vector<double> F_py(N);
+   vector<double> x_py(x.data(), x.data() + x.rows() * x.cols());
 
    for (int i = 0; i < M; i++)
    {
       mu = G_x[i];
       for (int j = 0; j < N; j++)
       {
-         y_py[j] = psi[i][j];
+         y_py[j] = psi(i,j);
       }
       string plot_tag = "Psi for mu = " + to_string(mu);
-      plt::named_plot(plot_tag, x, y_py);
+      plt::named_plot(plot_tag, x_py, y_py);
       // plt::scatter(x, y_py);
    }
 
@@ -800,8 +838,8 @@ int main()
       y_py[i] = phi[i];
       F_py[i] = F[i];
    }
-   plt::named_plot("phi", x, y_py);
-   plt::named_plot("Radiative flux", x, F_py);
+   plt::named_plot("phi", x_py, y_py);
+   plt::named_plot("Radiative flux", x_py, F_py);
 
    // plt::axis("on");
    plt::xlabel("x");

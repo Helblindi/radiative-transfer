@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Eigen/Dense>
+#include <unsupported/Eigen/CXX11/Tensor>
  
 using Eigen::MatrixXd;
 
@@ -37,6 +38,8 @@ int eigen_practice()
    vec(0) = 1.;
    vec(1) = 2.;
 
+   Eigen::MatrixXd matxd(3,2);
+
    std::cout << "Here is mat:\n" << mat << std::endl;
    std::cout << "Here is vec:\n" << vec << std::endl;
    std::cout << "Here is mat*mat:\n" << mat*mat << std::endl;
@@ -45,10 +48,22 @@ int eigen_practice()
    std::cout << "Let's multiply mat by itself" << std::endl;
    mat = mat*mat;
    std::cout << "Now mat is mat:\n" << mat << std::endl;
+   std::cout << "MatXd: " << matxd << std::endl;
 
    std::cout << "Lets change the first values in vec\n";
    change_val(vec); // changes first value
    std::cout << "vec after change:\n" << vec << std::endl;
+
+   /* 3D matrix */
+   Eigen::Tensor<double, 3> ttt(4,2,2);
+   ttt(0,0,0) = 1.;
+   ttt(0,0,1) = 1.1;
+   ttt(0,1,0) = 1.2;
+   ttt(0,1,1) = 1.3;
+   ttt(1,0,1) = 2.;
+   ttt(2,1,0) = 3.;
+   ttt(3,1,1) = 4.;
+   std::cout << "ttt: " << ttt << std::endl;
 
    /***
     * Matrix and Vector class types
