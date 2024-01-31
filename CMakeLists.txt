@@ -6,29 +6,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set the project name
-project(transfer LANGUAGES C CXX)
+project(rad_transfer LANGUAGES C CXX)
 
 # Prevent in source builds
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 include(PreventInSourceBuilds)
-
-if(APPLE)
-  find_package(Python 3 COMPONENTS Interpreter Development NumPy REQUIRED)
-  set(PYTHON_MAJOR $ENV{Python_VERSION_MAJOR})
-  set(PYTHON_MINOR $ENV{Python_VERSION_MINOR})
-  set(PYTHONLIBS_VERSION_STRING ${Python_VERSION})
-  set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS})
-  set(PYTHON_LIBRARIES ${Python_LIBRARIES})
-  message("Apple - Using Python:${Python_VERSION_MAJOR} - Libraries:${PYTHON_LIBRARIES} - IncludeDirs: ${PYTHON_INCLUDE_DIR}")
-elseif(UNIX)
-  find_package(PythonLibs 3 REQUIRED)
-else()
-  set(PYTHONLIBS_VERSION_STRING $ENV{PY_VERSION})
-endif()
-
-include_directories(${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIR})
-# link numpy
-link_libraries(Python::NumPy ${Python_LIBRARIES})
 
 # find and link eigen
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
@@ -61,25 +43,9 @@ if (NOT CMAKE_CXX_COMPILER)
   endif()
 endif()
 
-# populate matplotlib repository
-include(FetchContent)
-FetchContent_Declare(
-    matplotlib
-    GIT_REPOSITORY https://github.com/lava/matplotlib-cpp.git
-    GIT_TAG        f23347fca25219d1c42cbb91608b5556814bf572
-)
-FetchContent_GetProperties(matplotlib)
-if(NOT matplotlib_POPULATED)
-    FetchContent_Populate(matplotlib)
-endif()
-include_directories(SYSTEM ${matplotlib_SOURCE_DIR})
-
 ### Include Directories
-INCLUDE_DIRECTORIES(include)
+include_directories(include)
 add_subdirectory(src)
-
-file (GLOB_RECURSE rt_SOURCES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cc)
-file (GLOB_RECURSE rt_HEADERS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/include/*.h)
 
 # Enable testing
 # https://cmake.org/cmake/help/latest/command/add_test.html

@@ -1,9 +1,9 @@
 #ifndef COMPILE_TIME_VALS
 #define COMPILE_TIME_VALS
 
-using namespace std;
+#include <cmath>
 
-namespace rt
+namespace ctv
 {
    const static int M = 2;                              // Quadrature order, even
    const double G_x[M] = {-0.5773502692, 0.5773502692}; // Quadrature points
@@ -12,6 +12,12 @@ namespace rt
    // const static int M = 4;                              // Quadrature order, even
    // const double G_x[M] = {-0.861136, -0.339981, 0.339981, 0.861136}; // Quadrature points
    // const double G_w[M] = {2*M_PI*0.347855, 2*M_PI*0.652145, 2*M_PI*0.652145, 2*M_PI*0.347855};    // Quadrature weights, sum to 4Pi
+
+   // Energy Group specifics
+   const static int G = 1;                              // 1 group corresponds to grey case
+   const static double efirst = 10.;                    // right edge energy for first group (keV)
+   const static double elast = 10.;                     // right edge energy for last group (keV)
+   const static double kappa_grey = 1.;                 // Grey opacity
    
    const static double X = 2.;                          // Slab thickness
    const static int N = 100;                            // Number of cells
@@ -36,7 +42,7 @@ namespace rt
 
    // If either boundary indicator is source, those values need to be specified
    const double test_bc = a * c * pow(T, 4) / (4*M_PI);
-   double psi_source[M] = {test_bc, test_bc};
+   const double psi_source[M] = {test_bc, test_bc};
    // double psi_source[M] = {test_bc, test_bc, test_bc, test_bc};
 
 }
