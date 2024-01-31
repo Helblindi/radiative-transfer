@@ -32,7 +32,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#pragma once
+#ifndef PLANCK
+#define PLANCK
 
 #include <cmath>
 #include <cassert>
@@ -77,8 +78,9 @@ private:
 
 public:
 
-  Planck(double accuracy = std::numeric_limits<double>::epsilon());
-  ~Planck() {}
+   Planck(double accuracy = std::numeric_limits<double>::epsilon());
+
+   ~Planck() {}
 
   /// @brief returns the planck function B
   double get_B(double T, double E)
@@ -139,3 +141,5 @@ public:
 		            Eigen::Ref<Eigen::VectorXd> B, 
                   Eigen::Ref<Eigen::VectorXd> dBdT);
 };
+
+#endif // PLANCK
