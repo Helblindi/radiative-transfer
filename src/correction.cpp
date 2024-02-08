@@ -14,9 +14,11 @@ double Correction<num_groups>::pf(double E, double T)
    double h = Constants::PLANCK_CONSTANT;
    double c = Constants::SPEED_OF_LIGHT;
    double k = Constants::BOLTZMANN_CONSTANT_JPK;
-   double val;
+   
+   double denom = pow(h,3)*pow(c,2)*(exp(E/T)-1.0);
+   assert(denom != 0 && "Do not divide by 0!\n");
 
-   val = k*pow(E,3)/(pow(h,3)*pow(c,2)*(exp(E/T)-1.0));
+   double val = k*pow(E,3)/denom;
    return val;
 }
 
@@ -25,7 +27,7 @@ template<int num_groups>
 void Correction<num_groups>::generate_planck_integrals()
 {
    // Generate Planck Integrals (keV/(cm^2-SH))
-   // planck.get_Planck(T, energy_discretization_ref, B, dBdT);
+   planck.get_Planck(T, energy_discretization_ref, B, dBdT);
 
    // Change Planck integral units to JK/(CM^2-SH)
    for(int g = 0; g < num_groups; g++)
@@ -298,10 +300,10 @@ Correction<num_groups>::Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,
    dkapEB.resize(num_groups);
 
    kappa_edge.resize(num_groups+1);
-   cor1.resize(num_groups);
-   cor2.resize(num_groups);
-   cor3.resize(num_groups);
-   total_correction.resize(num_groups);
+   cor1.resize(num_groups, ctv::N);
+   cor2.resize(num_groups, ctv::N);
+   cor3.resize(num_groups, ctv::N);
+   total_correction.resize(ctv::M, num_groups, ctv::N);
 
    // All other helper functions depend on temperature, 
    // which will eventually change at each time step
@@ -311,11 +313,16 @@ Correction<num_groups>::Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,
 template<int num_groups>
 void Correction<num_groups>::compute_correction_terms()
 {
-   for(int g = 0;g < num_groups; g++)
+   // Note in this function there is no dependency on scattering angle. This is accounted for when the total correction is computed.
+   // Need to add spatial dependence
+   for(int g = 0; g < num_groups; g++)
    {
-      cor1(g) = dsigEdE(g);
-      cor2(g) = 3.0*kappa_ref(g)*B(g) - dkapEB(g);
-      cor3(g) = cor1(g)*(4.0*B(g) - dEB(g));
+      for (int cell_it = 0; cell_it < ctv::N; cell_it++)
+      {
+         cor1(g, cell_it) = dsigEdE(g);
+         cor2(g, cell_it) = 3.0*kappa_ref(g)*B(g) - dkapEB(g);
+         cor3(g, cell_it) = cor1(g)*(4.0*B(g) - dEB(g));
+      }
    }
 
    // cout << left << setw(7)  << "Group"
@@ -353,24 +360,35 @@ bool Correction<num_groups>::validate_correction()
 
 
 template<int num_groups>
-void Correction<num_groups>::compute_correction(Eigen::Ref<Eigen::VectorXd> intensities)
+void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 4>& intensities)
 {
    // Script to run all helper functions
    generate_planck_integrals();
-   generate_multigroup_opacities();
+   // generate_multigroup_opacities(); // Assumes constant opacity in g, not in use currently
    compute_group_edge_opacities();
    compute_components_of_correction_source();
    compute_correction_terms();
 
    // Finally put it all together
-   double mu = 1., beta = 1.;
-   double val = 0.;
-   for (int g = 0; g < num_groups; g++)
+   double mu = 0., beta = 1., val = 0.;
+   // correction 
+   for (int mu_it = 0; mu_it < ctv::M; mu_it++)
    {
-      val = (cor1(g)*intensities(g) + cor2(g)) * mu * beta;
-      val -= cor3(g) * pow(mu, 2) * pow(beta, 2);
-      total_correction(g) = val;
+      double mu = ctv::G_x[mu_it];
+      for (int g = 0; g < num_groups; g++)
+      {
+         for (int cell_it = 0; cell_it < ctv::N; cell_it++)
+         {
+            val = 0.;
+            
+            val = (cor1(g, cell_it)*intensities(mu_it, g, cell_it,0) + cor2(g, cell_it)) * mu * beta;
+            val -= cor3(g, cell_it) * pow(mu, 2) * pow(beta, 2);
+            total_correction(mu_it, g, cell_it) = val;
+         }
+         
+      }
    }
+   
 }
 
 template class Correction<ctv::G>;

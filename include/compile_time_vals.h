@@ -5,7 +5,7 @@
 
 namespace ctv
 {
-   const static int M = 2;                              // Quadrature order, even
+   const static int M = 2;                              // Quadrature order, even, num_directions
    const double G_x[M] = {-0.5773502692, 0.5773502692}; // Quadrature points
    const double G_w[M] = {2*M_PI, 2*M_PI};              // Quadrature weights, sum to 4Pi
 
@@ -14,8 +14,8 @@ namespace ctv
    // const double G_w[M] = {2*M_PI*0.347855, 2*M_PI*0.652145, 2*M_PI*0.652145, 2*M_PI*0.347855};    // Quadrature weights, sum to 4Pi
 
    // Energy Group specifics
-   const static int G = 1;                              // 1 group corresponds to grey case
-   const static double efirst = 10.;                    // right edge energy for first group (keV)
+   const static int G = 2;                              // 1 group corresponds to grey case
+   const static double efirst = 1.;                    // right edge energy for first group (keV)
    const static double elast = 10.;                     // right edge energy for last group (keV)
    const static double kappa_grey = 1.;                 // Grey opacity
    
@@ -36,7 +36,7 @@ namespace ctv
    const static double T = 1.;                          // Material temperature
 
    /* Time Stepping Options */
-   const static int ts_method = 2;                      // 1 - Backward Euler, 2 - BDF2, 3 - CN, 4 - BDF2 from Morel-Lou
+   const static int ts_method = 1;                      // 1 - Backward Euler, 2 - BDF2, 3 - CN, 4 - BDF2 from Morel-Lou
    const static double dt = 0.0001;
    const static int _max_timesteps = 500;
 

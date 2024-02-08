@@ -6,6 +6,7 @@
 #include <Constants.h>
 #include <Planck.h>
 #include <Eigen/Dense>
+#include <unsupported/Eigen/CXX11/Tensor>
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -28,8 +29,7 @@ private:
 
    Planck planck;
    Eigen::VectorXd B, dBdT;               // Planck integrals
-
-   Eigen::VectorXd ukappa;         // Unnormalized and final opacities respectively
+   Eigen::VectorXd ukappa;                // Unnormalized and final opacities respectively
    Eigen::VectorXd ckappa;                // Opacities evaluated at group center energies
    Eigen::VectorXd emis_spec;
 
@@ -54,8 +54,8 @@ private:
 
    Eigen::VectorXd kappa_edge;            // Edge opacities
 
-   Eigen::VectorXd cor1, cor2, cor3;      // correction terms 1, 2, and 3
-   Eigen::VectorXd total_correction;      // term representing total correction term
+   Eigen::MatrixXd cor1, cor2, cor3;      // correction terms 1, 2, and 3
+   Eigen::Tensor<double, 3> total_correction;      // term representing total correction term
 
    // Helper functions
    double pf(double E, double T);
@@ -79,8 +79,8 @@ public:
    ~Correction() {}
    // TODO: Compute correction will need the updated rho, T
    bool validate_correction();
-   void compute_correction(Eigen::Ref<Eigen::VectorXd> intensities);
-   void get_correction(Eigen::Ref<Eigen::VectorXd> total_correction)
+   void compute_correction(Eigen::Tensor<double, 4>& intensities);
+   void get_correction(Eigen::Tensor<double, 3>& total_correction)
    {
       total_correction = this->total_correction;
    }

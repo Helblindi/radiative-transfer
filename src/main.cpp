@@ -83,6 +83,27 @@ void display_input_quantities()
 }
 
 
+// template<typename Scalar_, int rank>
+// void shape(const Eigen::Tensor<Scalar_, rank>& x)
+// {
+//   cout << "( ";  
+//   for (int i(0); i<x.NumDimensions; i++){
+//       cout << x.dimensions()[i];
+//       cout << ",";
+//   }
+//   cout << ")";  
+// }
+
+template<typename Scalar_, int dim_>
+void print_to_file(const string filename, const Eigen::Tensor<Scalar_, dim_>& mat)
+{
+   ofstream file(filename);
+   if (file.is_open())
+   {
+      file << mat << endl;
+   }
+   file.close();
+}
 
 template<typename Scalar_, int rows, int cols>
 void print_to_file(const string filename, const Eigen::Matrix<Scalar_, rows, cols>& mat)
@@ -101,10 +122,18 @@ int main()
    // Output all input quantities
    display_input_quantities();
 
-   Eigen::VectorXd phi(ctv::N);            // angle-integrated intensity
-   Eigen::MatrixXd psi_mat(ctv::M,ctv::N); // solution, angular intensity
+   // TODO: change hardcoded time sizing variable.
+   // 5 is necessary since there are 5 steps of psi that are saved
+   //    0: psi^n
+   //    1: psi^n+1/2 predicted
+   //    2: psi^n+1/2 corrected
+   //    3: psi^n+1 predicted
+   //    4: psi^n+1 corrected
+   Eigen::Tensor<double, 4> psi_mat(ctv::M, ctv::G, ctv::N, 5); // solution, angular intensity
+   psi_mat.setConstant(0.);
    Eigen::VectorXd x(ctv::N);              // Mesh
-   Eigen::VectorXd F(ctv::N);              // radiative flux
+   Eigen::MatrixXd phi(ctv::G, ctv::N);            // angle-integrated intensity
+   Eigen::MatrixXd F(ctv::G, ctv::N);              // radiative flux
 
    // Initialize the mesh
    for (int i = 0; i < ctv::N; i++)
@@ -113,14 +142,15 @@ int main()
    }
 
    Solver<ctv::G> solver(psi_mat, phi, F);
+   // cout << "Solver initiated.\n";
    solver.solve();
 
    // Fill phi and F
-   solver.compute_angle_integrated_density();
-   solver.compute_radiative_flux();
+   // solver.compute_angle_integrated_density();
+   // solver.compute_radiative_flux();
 
    // Verify balance
-   double balance = solver.compute_balance();
+   // double balance = solver.compute_balance();
 
    // Print to file to be analyzed in python
    print_to_file("phi.csv", phi);
