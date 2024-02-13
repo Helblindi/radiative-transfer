@@ -20,18 +20,19 @@ private:
    Eigen::Ref<Eigen::MatrixXd> F_ref;             // radiative flux ref
    Eigen::MatrixXd kappa_mat;                     // kappa_mat
 
-   Eigen::Tensor<double, 4> ends;      // These are the nodes psi_{i,L}([0]) and psi_{i,R}([1])
-   Eigen::Tensor<double, 4> prev_ends;
-   Eigen::Tensor<double, 4> half_ends; // For BDF2 time stepping
+   Eigen::Tensor<double, 4> ends;                 // (current ts) These are the nodes psi_{m,i,L}([0]) and psi_{m,i,R}([1])
+                                                  // Possible: n + 1/2 predicted, n + 1/2, n+1 predicted, n+1
+   Eigen::Tensor<double, 4> prev_ends;            // (n)
+   Eigen::Tensor<double, 4> half_ends;            // (n+1/2) Used in BDF2 stepping
    Eigen::VectorXd rho_vec, kappa_vec, temperature;
 
    /* Vals needed for iteration */
    bool half_step = true;
    double mu = 0.;
    double bdry_cond = 0.;           // This is specified by ctv::bc_(right/left)_indicator and psi_source
-   double local_bdry = 0.;          // This will be given to us by the upwinding on the previous cell.
-   double half_local_bdry = 0.;     // This will be given to us by the upwinding on the previous cell.
-   double local_bdry_prev_it = 0.;  // This is also given by the upwinding on the previous cell at the previous timestep.
+   double local_bdry_prev_it = 0.;  // (n),     This is also given by the upwinding on the previous cell at the previous timestep.
+   double local_bdry = 0.;          // (n+1),   This will be given to us by the upwinding on the previous cell.
+   double half_local_bdry = 0.;     // (n+1/2), This will be given to us by the upwinding on the previous cell.
    double psi_half = 0.;
    Eigen::MatrixXd _mat, _mat_inverse;
    Eigen::VectorXd _rhs, _res;
@@ -46,7 +47,11 @@ private:
 
    /* ***** Time Stepping ***** */
    void backwardEuler(const int cell, const int scatteredDirIt, const int groupIt, 
-                      const double timestep, const double mu, double &local_bdry);
+                      const double timestep, const double mu);
+   void crankNicolson(const int cell, const int scatteredDirIt, const int groupIt, 
+                      const double timestep, const double mu);
+   void bdf(const int cell, const int scatteredDirIt, const int groupIt, 
+            const double timestep, const double mu);
 
 
 public:

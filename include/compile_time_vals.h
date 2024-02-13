@@ -36,9 +36,9 @@ namespace ctv
    const static double T = 1.;                          // Material temperature
 
    /* Time Stepping Options */
-   const static int ts_method = 1;                      // 1 - Backward Euler, 2 - BDF2, 3 - CN, 4 - BDF2 from Morel-Lou
+   const static int ts_method = 3;                      // 1 - Strictly Backward Euler, 2 - Strictly CN, 3 - BDF2
    const static double dt = 0.0001;
-   const static int _max_timesteps = 500;
+   const static int max_timesteps = 500;
 
    // If either boundary indicator is source, those values need to be specified
    const double test_bc = a * c * pow(T, 4) / (4*M_PI);
