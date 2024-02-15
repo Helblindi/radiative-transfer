@@ -168,17 +168,10 @@ void Solver<num_groups>::backwardEuler(
    // Constants are the same regardless of direction
    double const_A = 1. + Constants::SPEED_OF_LIGHT*timestep*rho_vec[cell] * kappa_vec[cell];
    double const_B = Constants::SPEED_OF_LIGHT*timestep*mu;
-   // cout << "cA: " << const_A << ", cB: " << const_B << ", cC: " << const_C << endl;
 
    if (mu < 0)
-   {
-      // cout << "kappa_vec: " << kappa_vec << endl;    
+   {  
       double _temp_val = (const_A * ctv::dx - const_B) / 2.;
-      // cout << "\t============= mu < 0\n";
-      // cout << "temp_val: " << _temp_val << endl;
-
-      // cout << "c: " << Constants::SPEED_OF_LIGHT << endl;
-      // cout << "dt: " << timestep << endl;
 
       _mat(0,0) = _temp_val; 
       _mat(0,1) = const_B / 2.;
@@ -201,10 +194,9 @@ void Solver<num_groups>::backwardEuler(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hard coded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
       // cout << "psi_mat_ref(scatteredDirIt,groupIt,cell): " << psi_mat_ref(scatteredDirIt,groupIt,cell) << endl;
-
+      // assert(false);
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
 
@@ -462,7 +454,10 @@ void Solver<num_groups>::solve()
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
       correction->compute_correction(psi_mat_ref);
+      assert(correction->validate_correction() && "Invalid Correction Terms\n");
       correction->get_B(this->B);
+      cout << "B: " << B << endl;
+      // assert(false);
       if (ctv::use_correction)
       {
          correction->get_correction(this->total_correction);

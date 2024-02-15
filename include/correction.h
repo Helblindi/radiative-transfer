@@ -11,6 +11,8 @@
 #include <cmath>
 #include <iostream>
 
+using namespace std;
+
 namespace rt
 {
 
@@ -65,8 +67,8 @@ private:
    void compute_components_of_correction_source();
    void compute_correction_terms();
 
-   void validate_planck_integrals();
-   void validate_emission();
+   bool validate_planck_integrals();
+   bool validate_emission();
 
 public:
    Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,

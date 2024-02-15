@@ -39,7 +39,7 @@ void Correction<num_groups>::generate_planck_integrals()
 
 
 template<int num_groups>
-void Correction<num_groups>::validate_planck_integrals()
+bool Correction<num_groups>::validate_planck_integrals()
 {
    // Check for proper sums of Planck integrals
    double bsum = 0., dbsum = 0.;
@@ -51,10 +51,18 @@ void Correction<num_groups>::validate_planck_integrals()
    }
    double acT4=ac*pow(T,4);
    double dacT4=4.0*ac*pow(T,3);
-  
-   // TODO: Write assert statement comparing acT^4 and bsum
-   // cout << "acT^4 = " << acT4 << " B sum = " << bsum << endl;
-   // cout << "4acT^3 = " << dacT4 << " dBdT sum = " << dbsum << "\n" << endl;
+
+   // These quantites must be the same
+   if (abs(acT4 - bsum) > ctv::validation_tolerance || 
+       abs(dacT4 - dbsum) > ctv::validation_tolerance)
+   {
+      cout << "acT^4 = " << acT4 << " B sum = " << bsum << endl;
+      cout << "4acT^3 = " << dacT4 << " dBdT sum = " << dbsum << "\n" << endl;
+
+      return false;
+   }
+
+   return true;
 }
 
 
@@ -100,7 +108,7 @@ void Correction<num_groups>::generate_multigroup_opacities()
 
 
 template<int num_groups>
-void Correction<num_groups>::validate_emission()
+bool Correction<num_groups>::validate_emission()
 {
    // Check for proper emission sum
    double acT4=ac*pow(T,4),
@@ -112,8 +120,18 @@ void Correction<num_groups>::validate_emission()
       emis_tot += kappa_ref(g)*B(g);
    }
 
-   // cout << "Total Emission = " << emis_tot 
-   //      << " kappa_ref*acT^4 = " << sigacT4 << "\n"  << endl;
+   
+
+   // total emission thould be equal to sigacT4
+   if (abs(emis_tot - sigacT4) > ctv::validation_tolerance)
+   {
+      cout << "Total Emission = " << emis_tot 
+           << " kappa_ref*acT^4 = " << sigacT4 << "\n"  << endl;
+
+      return false;
+   }
+
+   return true;
 }
 
 
@@ -236,11 +254,14 @@ void Correction<num_groups>::compute_components_of_correction_source()
 
    // Compute energy differences of kappa_ref*EB
    dkapEB(0) = kappa_edge(1)*e_edge_ref(1)*pf(e_edge_ref(1),T);
-   for(int g = 1; g < num_groups-1; g++)
-   {  
-      dkapEB(g) = kappa_edge(g+1)*e_edge_ref(g+1)*pf(e_edge_ref(g+1),T) - kappa_edge(g)*e_edge_ref(g)*pf(e_edge_ref(g),T);
+   if (num_groups > 1) // Only necessary for non-grey situations
+   {
+      for(int g = 1; g < num_groups-1; g++)
+      {  
+         dkapEB(g) = kappa_edge(g+1)*e_edge_ref(g+1)*pf(e_edge_ref(g+1),T) - kappa_edge(g)*e_edge_ref(g)*pf(e_edge_ref(g),T);
+      }
+      dkapEB(num_groups-1) = - kappa_edge(num_groups-1)*e_edge_ref(num_groups-1)*pf(e_edge_ref(num_groups-1),T);
    }
-   dkapEB(num_groups-1) = - kappa_edge(num_groups-1)*e_edge_ref(num_groups-1)*pf(e_edge_ref(num_groups-1),T);
   
    // Check for zero sum of differences
    sum = 0.0;   
@@ -352,10 +373,7 @@ void Correction<num_groups>::compute_correction_terms()
 template<int num_groups>
 bool Correction<num_groups>::validate_correction()
 {
-   validate_planck_integrals();
-   validate_emission();
-
-   return true;
+   return (validate_planck_integrals() && validate_emission());
 }
 
 

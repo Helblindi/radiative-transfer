@@ -19,7 +19,7 @@ namespace ctv
    const static double elast = 10.;                     // right edge energy for last group (keV)
    const static double kappa_grey = 1.;                 // Grey opacity
    
-   const static double X = 2.;                          // Slab thickness
+   const static double X = 1.;                          // Slab thickness
    const static int N = 100;                            // Number of cells
    const static double dx = X / N;                      // cell size
    const static int bc_left_indicator = 2;              // vacuum - 0, // TODO: Change this to an array that matches M / 2
@@ -36,15 +36,16 @@ namespace ctv
 
    /* Correction terms options */
    const bool use_correction = false;
+   const double validation_tolerance = 1.E-6;
 
    /* Time Stepping Options */
    const static int ts_method = 3;                      // 1 - Strictly Backward Euler, 2 - Strictly CN, 3 - BDF2
-   const static double dt = 0.0001;
-   const static int max_timesteps = 500;
+   const static double dt = 0.00001;
+   const static int max_timesteps = 1000;
 
    // If either boundary indicator is source, those values need to be specified
    const double test_bc = Constants::RADIATION_CONSTANT_A * Constants::SPEED_OF_LIGHT * pow(T, 4) / (Constants::FOUR_PI);
-   const double psi_source[M] = {test_bc, test_bc};
+   const double psi_source[M] = {4.0931, 4.0931};
    // double psi_source[M] = {test_bc, test_bc, test_bc, test_bc};
 }
 
