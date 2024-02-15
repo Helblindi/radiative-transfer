@@ -52,10 +52,10 @@ private:
     * *****/
    Eigen::VectorXd dEB, dsigEdE, dkapEB;
 
-   Eigen::VectorXd kappa_edge;            // Edge opacities
+   Eigen::VectorXd kappa_edge;                     // Edge opacities
 
-   Eigen::MatrixXd cor1, cor2, cor3;      // correction terms 1, 2, and 3
-   Eigen::Tensor<double, 3> total_correction;      // term representing total correction term
+   Eigen::MatrixXd cor1, cor2, cor3;               // correction terms 1, 2, and 3
+   Eigen::Tensor<double, 3> total_correction;      // dir, group, cell
 
    // Helper functions
    double pf(double E, double T);
@@ -79,7 +79,7 @@ public:
    ~Correction() {}
    // TODO: Compute correction will need the updated rho, T
    bool validate_correction();
-   void compute_correction(Eigen::Tensor<double, 4>& intensities);
+   void compute_correction(Eigen::Tensor<double, 3>& intensities);
    void get_correction(Eigen::Tensor<double, 3>& total_correction)
    {
       total_correction = this->total_correction;

@@ -129,7 +129,7 @@ int main()
    //    2: psi^n+1/2 corrected
    //    3: psi^n+1 predicted
    //    4: psi^n+1 corrected
-   Eigen::Tensor<double, 4> psi_mat(ctv::M, ctv::G, ctv::N, 5); // solution, angular intensity
+   Eigen::Tensor<double, 3> psi_mat(ctv::M, ctv::G, ctv::N); // solution, angular intensity
    psi_mat.setConstant(0.);
    Eigen::VectorXd x(ctv::N);              // Mesh
    Eigen::MatrixXd phi(ctv::G, ctv::N);            // angle-integrated intensity

@@ -35,6 +35,9 @@ namespace ctv
    const static double kappa = 1.;                      // Absorption opacity
    const static double T = 1.;                          // Material temperature
 
+   /* Correction terms options */
+   const bool use_correction = false;
+
    /* Time Stepping Options */
    const static int ts_method = 3;                      // 1 - Strictly Backward Euler, 2 - Strictly CN, 3 - BDF2
    const static double dt = 0.0001;

@@ -15,7 +15,7 @@ class Solver
 {
 private:
    /* ============ From main ============ */
-   Eigen::Tensor<double, 4>& psi_mat_ref;         // solution, angular intensity ref
+   Eigen::Tensor<double, 3>& psi_mat_ref;         // solution, angular intensity ref
    Eigen::Ref<Eigen::MatrixXd> phi_ref;           // angle-integrated intensity ref
    Eigen::Ref<Eigen::MatrixXd> F_ref;             // radiative flux ref
    Eigen::MatrixXd kappa_mat;                     // kappa_mat
@@ -39,6 +39,7 @@ private:
    /* ============ end main ============ */
 
    Correction<num_groups> * correction;
+   Eigen::Tensor<double, 3> total_correction;
    double logfac;
    double efirst=ctv::efirst, elast=ctv::elast;
    Eigen::VectorXd e_edge, e_ave, de_ave; // Group edge, average energies, and average group widths in kev
@@ -57,7 +58,7 @@ private:
 public:
    void generate_group_edges_and_averages(); // inherited from Correction class
    void fill_energy_bound_arrays();          // inherited from Correction class
-   Solver(Eigen::Tensor<double, 4>& psi_mat,
+   Solver(Eigen::Tensor<double, 3>& psi_mat,
           Eigen::Ref<Eigen::MatrixXd> phi,
           Eigen::Ref<Eigen::MatrixXd> F);
           

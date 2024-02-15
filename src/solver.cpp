@@ -37,7 +37,7 @@ void Solver<num_groups>::fill_energy_bound_arrays()
 
 
 template<int num_groups>
-Solver<num_groups>::Solver(Eigen::Tensor<double, 4>& psi_mat,
+Solver<num_groups>::Solver(Eigen::Tensor<double, 3>& psi_mat,
                            Eigen::Ref<Eigen::MatrixXd> phi,
                            Eigen::Ref<Eigen::MatrixXd> F) :
    psi_mat_ref(psi_mat),
@@ -87,7 +87,7 @@ void Solver<num_groups>::compute_angle_integrated_density()
          for (int mu_it = 0; mu_it < ctv::M; mu_it++)
          {
             // TODO: Change time variable hard coded here
-            phi_ref(g, cell_it) += ctv::G_w[mu_it] * psi_mat_ref(mu_it, g, cell_it, 0);
+            phi_ref(g, cell_it) += ctv::G_w[mu_it] * psi_mat_ref(mu_it, g, cell_it);
          }
       }
    }
@@ -104,7 +104,7 @@ void Solver<num_groups>::compute_radiative_flux()
          F_ref(g, cell_it) = 0.;
          for (int mu_it = 0.; mu_it < ctv::M; mu_it++)
          {
-            F_ref(g, cell_it) += ctv::G_x[mu_it] * ctv::G_w[mu_it] * psi_mat_ref(mu_it,g,cell_it,0);
+            F_ref(g, cell_it) += ctv::G_x[mu_it] * ctv::G_w[mu_it] * psi_mat_ref(mu_it,g,cell_it);
          }
       }
    }
@@ -185,25 +185,25 @@ void Solver<num_groups>::backwardEuler(
       _mat(1,0) = - const_B / 2.;
       _mat(1,1) = _temp_val;
 
-      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;  // CORTODO: Add correction
+      // Temperature and correction terms
+      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
+      // Fill RHS
       _rhs(0) = _temp_val + ctv::dx * ends(scatteredDirIt,groupIt,cell,0) / 2.;
       _rhs(1) = _temp_val - (const_B * local_bdry) + ctv::dx * ends(scatteredDirIt,groupIt,cell,1) / 2.;
 
-      // cout << "_rhs: " << _rhs << endl;
-      // Invert matrix
-      // inverseMatrix(_mat, 2, _mat_inverse);
+      // Solve
       _mat_inverse = _mat.inverse();
-      // cout << "_mat_inverse: " << _mat_inverse << endl;
-
-      // Solve 
-      // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
       _res = _mat_inverse * _rhs;
-      // cout << "_res: " << _res << endl;
 
       // put the average of val and local boundary here
       // TODO: Fix hard coded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
-      // cout << "psi_mat_ref(scatteredDirIt,groupIt,cell,0): " << psi_mat_ref(scatteredDirIt,groupIt,cell,0) << endl;
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
+      // cout << "psi_mat_ref(scatteredDirIt,groupIt,cell): " << psi_mat_ref(scatteredDirIt,groupIt,cell) << endl;
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
@@ -223,22 +223,24 @@ void Solver<num_groups>::backwardEuler(
       // cout << "_mat: " << endl;
       // cout << _mat << endl;
 
-      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;  // CORTODO: Add correction
+      // Temperature and correction terms
+      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
+      // Fill RHS
       _rhs[0] = _temp_val + (const_B * local_bdry) + ctv::dx * ends(scatteredDirIt,groupIt,cell,0) / 2.;
       _rhs[1] = _temp_val + ctv::dx * ends(scatteredDirIt,groupIt,cell,1) / 2.;
 
-      // Invert matrix
-      // inverseMatrix(_mat, 2, _mat_inverse);
+      // Solve
       _mat_inverse = _mat.inverse();
-
-      // Solve 
-      // matrixVectorMultiply(_mat_inverse, 2, _rhs, _res);
       _res = _mat_inverse * _rhs;
-      // cout << "_res: " << _res << endl;
 
       // put the average of val and local boundary here
       // TODO: Fix hardcoded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
       // cout << "psi_mat_ref(scatteredDirIt,groupIt,cell,0): " << psi_mat_ref(scatteredDirIt,groupIt,cell,0) << endl;
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
@@ -278,8 +280,14 @@ void Solver<num_groups>::crankNicolson(
       _mat(1,0) = - 0.5 * const_A;
       _mat(1,1) = _temp_val;
 
+      // Temperature and correction terms
+      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4);
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
       // Fill RHS
-      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4); // CORTODO: Add correction
       _rhs[0] = _temp_val + 0.5 * (const_C * ctv::dx + const_A) * ends(scatteredDirIt,groupIt,cell,0) - 0.5 * const_A * ends(scatteredDirIt,groupIt,cell,1);
       _rhs[1] = _temp_val + 0.5 * const_A * ends(scatteredDirIt,groupIt,cell,0) + 0.5 * (const_C * ctv::dx + const_A) * ends(scatteredDirIt,groupIt,cell,1) - const_A * (local_bdry_prev_it + half_local_bdry);
 
@@ -289,7 +297,7 @@ void Solver<num_groups>::crankNicolson(
 
       // put the average of val and local boundary here
       // TODO: Fix hard coded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
@@ -307,8 +315,14 @@ void Solver<num_groups>::crankNicolson(
       _mat(1,0) = - const_A / 2.;
       _mat(1,1) = _temp_val;
 
+      // Temperature and correction terms
+      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4); 
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
       // Fill RHS
-      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4); // CORTODO: Add correction
       _rhs[0] = _temp_val + 0.5 * (const_C * ctv::dx - const_A) * ends(scatteredDirIt,groupIt,cell,0) - 0.5 * const_A * ends(scatteredDirIt,groupIt,cell,1) + const_A * (local_bdry_prev_it + half_local_bdry);
       _rhs[1] = _temp_val + 0.5 * const_A * ends(scatteredDirIt,groupIt,cell,0) + 0.5 * (const_C * ctv::dx - const_A) * ends(scatteredDirIt,groupIt,cell,1);
 
@@ -318,7 +332,7 @@ void Solver<num_groups>::crankNicolson(
 
       // put the average of val and local boundary here
       // TODO: Fix hardcoded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
@@ -357,8 +371,14 @@ void Solver<num_groups>::bdf(
       _mat(1,0) = - 0.5 * const_B;
       _mat(1,1) = _temp_val;
 
+      // Temperature and correction terms
+      _temp_val = 0.5 * const_E * ctv::dx * pow(temperature[cell], 4);
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
       // Fill RHS
-      _temp_val = 0.5 * const_E * ctv::dx * pow(temperature[cell], 4); // CORTODO: Add correction
       _rhs[0] = _temp_val + 0.5 * (const_C * ctv::dx + 4. * const_B) * half_ends(scatteredDirIt,groupIt,cell,0) - 2. * const_B * half_ends(scatteredDirIt,groupIt,cell,1);
       _rhs[0] += 0.5 * (const_B - const_D * ctv::dx) * prev_ends(scatteredDirIt,groupIt,cell,0) - 0.5 * const_B * prev_ends(scatteredDirIt,groupIt,cell,1);
 
@@ -372,7 +392,7 @@ void Solver<num_groups>::bdf(
 
       // put the average of val and local boundary here
       // TODO: Fix hard coded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
@@ -391,8 +411,14 @@ void Solver<num_groups>::bdf(
       _mat(1,0) = - 0.5 * const_B;
       _mat(1,1) = _temp_val;
 
-      // Fill RHS
+      // Temperature and correction terms
       _temp_val = 0.5 * const_E * ctv::dx * pow(temperature[cell], 4);
+      if (ctv::use_correction)
+      {
+         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+      }
+
+      // Fill RHS
       _rhs[0] = _temp_val + 0.5 * (const_C * ctv::dx - 4. * const_B) * half_ends(scatteredDirIt,groupIt,cell,0) - 2. * const_B * half_ends(scatteredDirIt,groupIt,cell,1);
       _rhs[0] -= 0.5 * (const_B + const_D * ctv::dx) * prev_ends(scatteredDirIt,groupIt,cell,0) + 0.5 * const_B * prev_ends(scatteredDirIt,groupIt,cell,1);
       _rhs[0] += const_B * (local_bdry + 4. * half_local_bdry + local_bdry_prev_it);
@@ -406,7 +432,7 @@ void Solver<num_groups>::bdf(
 
       // put the average of val and local boundary here
       // TODO: Fix hardcoded time param
-      psi_mat_ref(scatteredDirIt,groupIt,cell,0) = 0.5*(_res[0] + _res[1]);
+      psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
       ends(scatteredDirIt,groupIt,cell,1) = _res[1];
@@ -437,6 +463,12 @@ void Solver<num_groups>::solve()
 
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
+      if (ctv::use_correction)
+      {
+         correction->compute_correction(psi_mat_ref);
+         correction->get_correction(this->total_correction);
+      }
+      
       if (ctv::ts_method != 3 || _it % 4 == 0)
       {
          // Onles set prev_ends if not BDF2 timestepping, or if we've completed one full step
@@ -544,32 +576,22 @@ void Solver<num_groups>::solve()
                         switch (ts_indicator) {
                            case 0: // BE Predictor
                            {
-                              // Compute correction terms at n
-                              // CORTODO
-                              // TODO: Change hard coded parameter in time space
-                              correction->compute_correction(psi_mat_ref);
                               backwardEuler(cell_j, i, g, ctv::dt/2., mu);
                               break;
                            }
                            case 1: // CN Corrector
                            {
-                              // Compute correction terms at n+1/4
-                              // CORTODO 
                               crankNicolson(cell_j, i, g, ctv::dt/2., mu);
                               half_ends = ends;
                               break;
                            }
                            case 2: // 2nd BE Predictor
                            {
-                              // Compute correction terms at n+1/2
-                              // CORTODO
                               backwardEuler(cell_j, i, g, ctv::dt/2., mu);
                               break;
                            }
                            case 3: // BDF Corrector
                            {
-                              // Compute correction terms at n+1
-                              // CORTODO
                               bdf(cell_j, i, g, ctv::dt/2., mu);
                               break;
                            }
@@ -607,29 +629,21 @@ void Solver<num_groups>::solve()
                         switch (ts_indicator) {
                            case 0: // BE Predictor
                            {
-                              // Compute correction terms at n
-                              // CORTODO
                               backwardEuler(j, i, g, ctv::dt/2., mu);
                               break;
                            }
                            case 1: // CN Corrector
                            {
-                              // Compute correction terms at n+1/4
-                              // CORTODO
                               crankNicolson(j, i, g, ctv::dt/2., mu);
                               break;
                            }
                            case 2: // 2nd BE Predictor
                            {
-                              // Compute correction terms at n+1/2
-                              // CORTODO
                               backwardEuler(j, i, g, ctv::dt/2., mu);
                               break;
                            }
                            case 3: // BDF Corrector
                            {
-                              // Compute correction terms at n+1
-                              // CORTODO
                               bdf(j, i, g, ctv::dt/2., mu);
                               break;
                            }
@@ -644,9 +658,9 @@ void Solver<num_groups>::solve()
                      {
                         assert(false && "Incorrect timestepping method provided.\n");
                      }
-                  }
-               }
-            }
+                  } // end ts_method
+               } // end mu > 0
+            } // end sweep
             if (mu < 0) {
                cout << "Final psi(" << g << ") for mu " << mu << " is: " << ends(i,g,0,0) << endl;
             } else {

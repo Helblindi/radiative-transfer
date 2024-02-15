@@ -360,7 +360,7 @@ bool Correction<num_groups>::validate_correction()
 
 
 template<int num_groups>
-void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 4>& intensities)
+void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 3>& intensities)
 {
    // Script to run all helper functions
    generate_planck_integrals();
@@ -381,7 +381,7 @@ void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 4>& intens
          {
             val = 0.;
             
-            val = (cor1(g, cell_it)*intensities(mu_it, g, cell_it,0) + cor2(g, cell_it)) * mu * beta;
+            val = (cor1(g, cell_it)*intensities(mu_it, g, cell_it) + cor2(g, cell_it)) * mu * beta;
             val -= cor3(g, cell_it) * pow(mu, 2) * pow(beta, 2);
             total_correction(mu_it, g, cell_it) = val;
          }
