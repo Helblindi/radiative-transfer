@@ -1,10 +1,11 @@
-#pragma once
+#ifndef CONSTANTS 
+#define CONSTANTS 
 
 #include <cmath>
 
-namespace Constants
+namespace Constants 
 {
-
+/* Constants that dont change */
 static const double PLANCK_CONSTANT_JS     = 6.626083e-35;         // jk-sh
 static const double PLANCK_CONSTANT        = 4.141895e-10;         // keV-sh
 static const double BOLTZMANN_CONSTANT     = 1.0;                  // keV/keV
@@ -18,6 +19,7 @@ static const double NATURAL_LOG_2          = 0.6931471806;         // natural lo
 
 using std::pow;
 static const double RADIATION_CONSTANT_A_LONG = (8.0*pow(PI,5)*pow(BOLTZMANN_CONSTANT,4))/
-  (15.0*pow(PLANCK_CONSTANT,3)*pow(SPEED_OF_LIGHT,3));   // keV/cm^3-KeV^4
-
+(15.0*pow(PLANCK_CONSTANT,3)*pow(SPEED_OF_LIGHT,3));   // keV/cm^3-KeV^4
 }
+
+#endif

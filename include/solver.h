@@ -1,6 +1,7 @@
 #ifndef SOLVER 
 #define SOLVER
 
+#include "constants.h"
 #include "compile_time_vals.h"
 #include "correction.h"
 #include <Eigen/Dense>
@@ -14,7 +15,7 @@ template<int num_groups>
 class Solver
 {
 private:
-   /* ============ From main ============ */
+   const double ac = Constants::RADIATION_CONSTANT_A*Constants::SPEED_OF_LIGHT;
    Eigen::Tensor<double, 3>& psi_mat_ref;         // solution, angular intensity ref
    Eigen::Ref<Eigen::MatrixXd> phi_ref;           // angle-integrated intensity ref
    Eigen::Ref<Eigen::MatrixXd> F_ref;             // radiative flux ref
@@ -25,6 +26,7 @@ private:
    Eigen::Tensor<double, 4> prev_ends;            // (n)
    Eigen::Tensor<double, 4> half_ends;            // (n+1/2) Used in BDF2 stepping
    Eigen::VectorXd rho_vec, kappa_vec, temperature;
+   Eigen::VectorXd B;                             // Planckian terms by group, these are computed in the correction class
 
    /* Vals needed for iteration */
    bool half_step = true;

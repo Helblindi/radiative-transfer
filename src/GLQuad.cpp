@@ -1,5 +1,4 @@
 #include "GLQuad.h"
-#include "Constants.h"
 
 
 void GLQuad::build(double tolerance)

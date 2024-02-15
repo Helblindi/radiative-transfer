@@ -320,7 +320,7 @@ void Correction<num_groups>::compute_correction_terms()
       for (int cell_it = 0; cell_it < ctv::N; cell_it++)
       {
          cor1(g, cell_it) = dsigEdE(g);
-         cor2(g, cell_it) = 3.0*kappa_ref(g)*B(g) - dkapEB(g);
+         cor2(g, cell_it) = 3.0*rho_ref(g)*kappa_ref(g)*B(g) - dkapEB(g);
          cor3(g, cell_it) = cor1(g)*(4.0*B(g) - dEB(g));
       }
    }
@@ -370,7 +370,7 @@ void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 3>& intens
    compute_correction_terms();
 
    // Finally put it all together
-   double mu = 0., beta = 1., val = 0.;
+   double mu = 0., beta = ctv::V / Constants::SPEED_OF_LIGHT, val = 0.;
    // correction 
    for (int mu_it = 0; mu_it < ctv::M; mu_it++)
    {

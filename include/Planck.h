@@ -40,7 +40,7 @@
 #include <limits>
 #include <Eigen/Dense>
 
-#include "Constants.h"
+#include "constants.h"
 
 /*!
   \file Planck.h

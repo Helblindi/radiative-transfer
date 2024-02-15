@@ -2,8 +2,8 @@
 #define CORRECTION
 
 
+#include <constants.h>
 #include <compile_time_vals.h>
-#include <Constants.h>
 #include <Planck.h>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
@@ -83,6 +83,10 @@ public:
    void get_correction(Eigen::Tensor<double, 3>& total_correction)
    {
       total_correction = this->total_correction;
+   }
+   void get_B(Eigen::Ref<Eigen::VectorXd> B)
+   {
+      B = this->B;
    }
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen/Dense>
+#include "constants.h"
 
 // 1D Gauss-Legendre quadrature set
 class GLQuad

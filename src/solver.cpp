@@ -67,6 +67,7 @@ Solver<num_groups>::Solver(Eigen::Tensor<double, 3>& psi_mat,
    rho_vec.setConstant(ctv::rho);
    kappa_vec.setConstant(ctv::kappa);
    temperature.setConstant(ctv::T);
+   B.resize(num_groups);
                               
    correction = new Correction<num_groups>(rho_vec, kappa_vec, temperature, e_edge, 
                                            e_ave, de_ave, energy_discretization);
@@ -144,7 +145,7 @@ void Solver<num_groups>::compute_balance()
       for (int cell_it = 0; cell_it < ctv::N; cell_it++)
       {
          _abs += rho_vec[cell_it] * kappa_vec[cell_it] * phi_ref(g,cell_it) * ctv::dx;
-         _src += rho_vec[cell_it] * kappa_vec[cell_it] * ctv::a * ctv::c * pow(temperature[cell_it],4) * ctv::dx;
+         _src += rho_vec[cell_it] * kappa_vec[cell_it] * ac * pow(temperature[cell_it],4) * ctv::dx;
       }
 
       double sources = jN_half_plus + j_half_minus + _abs;
@@ -165,9 +166,8 @@ void Solver<num_groups>::backwardEuler(
    const double timestep, const double mu)
 {
    // Constants are the same regardless of direction
-   double const_A = 1. + ctv::c*timestep*rho_vec[cell] * kappa_vec[cell];
-   double const_B = ctv::c*timestep*mu;
-   double const_C = timestep*rho_vec[cell] * kappa_vec[cell] * ctv::a * pow(ctv::c,2) / (4 * M_PI);
+   double const_A = 1. + Constants::SPEED_OF_LIGHT*timestep*rho_vec[cell] * kappa_vec[cell];
+   double const_B = Constants::SPEED_OF_LIGHT*timestep*mu;
    // cout << "cA: " << const_A << ", cB: " << const_B << ", cC: " << const_C << endl;
 
    if (mu < 0)
@@ -177,7 +177,7 @@ void Solver<num_groups>::backwardEuler(
       // cout << "\t============= mu < 0\n";
       // cout << "temp_val: " << _temp_val << endl;
 
-      // cout << "c: " << ctv::c << endl;
+      // cout << "c: " << Constants::SPEED_OF_LIGHT << endl;
       // cout << "dt: " << timestep << endl;
 
       _mat(0,0) = _temp_val; 
@@ -185,11 +185,11 @@ void Solver<num_groups>::backwardEuler(
       _mat(1,0) = - const_B / 2.;
       _mat(1,1) = _temp_val;
 
-      // Temperature and correction terms
-      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -223,11 +223,11 @@ void Solver<num_groups>::backwardEuler(
       // cout << "_mat: " << endl;
       // cout << _mat << endl;
 
-      // Temperature and correction terms
-      _temp_val = const_C * ctv::dx * pow(temperature[cell], 4) / 2.;
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -263,12 +263,11 @@ void Solver<num_groups>::crankNicolson(
    const int cell, const int scatteredDirIt, const int groupIt, 
    const double timestep, const double mu)
 {
-   double _temp_val = 0.5 * ctv::c * timestep * rho_vec[cell] * kappa_vec[cell];
+   double _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * rho_vec[cell] * kappa_vec[cell];
 
-   double const_A = 0.5 * ctv::c * mu * timestep;
+   double const_A = 0.5 * Constants::SPEED_OF_LIGHT * mu * timestep;
    double const_B = 1 + _temp_val;
    double const_C = 1 - _temp_val;
-   double const_D = rho_vec[cell] * kappa_vec[cell] * ctv::a * pow(ctv::c,2) * timestep / (4 * M_PI); 
 
    if (mu < 0)
    {
@@ -280,11 +279,11 @@ void Solver<num_groups>::crankNicolson(
       _mat(1,0) = - 0.5 * const_A;
       _mat(1,1) = _temp_val;
 
-      // Temperature and correction terms
-      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4);
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -315,11 +314,11 @@ void Solver<num_groups>::crankNicolson(
       _mat(1,0) = - const_A / 2.;
       _mat(1,1) = _temp_val;
 
-      // Temperature and correction terms
-      _temp_val = 0.5 * const_D * ctv::dx * pow(temperature[cell], 4); 
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -354,13 +353,12 @@ void Solver<num_groups>::bdf(
    const double timestep, const double mu)
 {
    // Constants are the same regardless of direction
-   double _temp_val = ctv::c * rho_vec[cell] * kappa_vec[cell] * timestep / 6.;
+   double _temp_val = Constants::SPEED_OF_LIGHT * rho_vec[cell] * kappa_vec[cell] * timestep / 6.;
 
    double const_A = 1. + _temp_val;
-   double const_B = ctv::c * mu * ctv::dt / 6.;
+   double const_B = Constants::SPEED_OF_LIGHT * mu * ctv::dt / 6.;
    double const_C = 1. - 4. * _temp_val;
    double const_D = _temp_val;
-   double const_E = rho_vec[cell] * kappa_vec[cell] * ctv::a * pow(ctv::c,2) * timestep / (4. * M_PI);
 
    if (mu < 0)
    {
@@ -371,11 +369,11 @@ void Solver<num_groups>::bdf(
       _mat(1,0) = - 0.5 * const_B;
       _mat(1,1) = _temp_val;
 
-      // Temperature and correction terms
-      _temp_val = 0.5 * const_E * ctv::dx * pow(temperature[cell], 4);
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);      
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -411,11 +409,11 @@ void Solver<num_groups>::bdf(
       _mat(1,0) = - 0.5 * const_B;
       _mat(1,1) = _temp_val;
 
-      // Temperature and correction terms
-      _temp_val = 0.5 * const_E * ctv::dx * pow(temperature[cell], 4);
+      // Planckian and correction terms
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
       if (ctv::use_correction)
       {
-         _temp_val += 0.5 * ctv::c * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
+         _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * ctv::dx * total_correction(scatteredDirIt, groupIt, cell);
       }
 
       // Fill RHS
@@ -463,10 +461,12 @@ void Solver<num_groups>::solve()
 
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
+      correction->compute_correction(psi_mat_ref);
+      correction->get_B(this->B);
       if (ctv::use_correction)
       {
-         correction->compute_correction(psi_mat_ref);
          correction->get_correction(this->total_correction);
+         // CORTODO: If we don't want to use correction, we still need to compute B.
       }
       
       if (ctv::ts_method != 3 || _it % 4 == 0)
@@ -530,7 +530,7 @@ void Solver<num_groups>::solve()
                   {
                      // Get index j corresponding to direction -mu
                      int diff = i - (ctv::M / 2); // Difference from center index
-                     int m_neg = (ctv::M / 2) - 1 - diff; // Move in opposite direction to yield index of -mu [-ctv::c, -b, -ctv::a, ctv::a, b, ctv::c]
+                     int m_neg = (ctv::M / 2) - 1 - diff; // Move in opposite direction to yield index of -mu 
 
                      bdry_cond = ends(m_neg,g,0,0);
                      break;
