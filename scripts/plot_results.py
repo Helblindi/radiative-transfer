@@ -39,11 +39,29 @@ def main():
    # plt::legend();
    # plt::title("Testing");
    # plt::show();
-   x_arr = pd.read_csv("../build/x.csv", sep=',', header=None).to_numpy()
-   phi_arr = pd.read_csv("../build/phi.csv", sep=',', header=None).to_numpy()
-   psi_mat = pd.read_csv("../build/psi.csv", sep=',', header=None).to_numpy()
-   F_arr = pd.read_csv("../build/F.csv", sep=',', header=None).to_numpy()
-   plt.plot(x_arr, phi_arr)
+   df_x = pd.read_csv("../build/x.csv", sep=',', header=None)
+   df_phi = pd.read_csv("../build/phi.csv", delim_whitespace=True, header=None)
+   df_F = pd.read_csv("../build/F.csv", delim_whitespace=True, header=None)
+
+   num_G = df_phi.shape[0]
+   num_N = df_phi.shape[1]
+
+   print("num groups: ", num_G)
+   print("num_cells: ", num_N)
+
+   x_arr = df_x.to_numpy()[:,0] # delimeter for x.csv was newline char
+   phi_arr = df_phi.to_numpy()[0]
+   
+   for g in range(num_G):
+      F_arr_g = df_F.to_numpy()[g]
+      print("F for g: ", F_arr_g)
+      _label="F, g=" + str(g)
+      plt.plot(x_arr, F_arr_g,label=_label)
+
+   # print(df_phi)
+
+   # plt.plot(x_arr, phi_arr)
+   plt.legend()
    plt.show()
 
    return 

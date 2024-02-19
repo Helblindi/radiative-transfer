@@ -172,15 +172,15 @@ int main(int argc, char **argv)
    solver.solve();
 
    // Fill phi and F
-   // solver.compute_angle_integrated_density();
-   // solver.compute_radiative_flux();
+   solver.compute_angle_integrated_density();
+   solver.compute_radiative_flux();
 
    // Verify balance
-   // double balance = solver.compute_balance();
+   solver.compute_balance();
 
    // Print to file to be analyzed in python
    print_to_file("phi.csv", phi);
-   print_to_file("psi.csv", psi_mat);
+   // print_to_file("psi.csv", psi_mat);
    print_to_file("x.csv", x);
    print_to_file("F.csv", F);
 
