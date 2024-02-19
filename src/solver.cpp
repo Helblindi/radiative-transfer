@@ -67,6 +67,12 @@ Solver::Solver(ParameterHandler & parameter_handler,
    cout << setw(16) << left << "Mu" << setw(16) << left << "Wt" << endl
         << setw(16) << left << "--" << setw(16) << left << "--" << endl;
 
+   for(int i = 0;i < M;++i)
+   {
+      cout << showpos << setw(16) << left << m_mu(i) << setw(16) << left << m_wt(i) << endl;
+   }
+   cout << noshowpos << endl;
+
    // Set up energy discretization
    e_edge.resize(num_groups+1);
    e_ave.resize(num_groups);
@@ -86,12 +92,17 @@ Solver::Solver(ParameterHandler & parameter_handler,
    _rhs.resize(2);
    _res.resize(2);   
 
+   // resize balance
+   balance.resize(num_groups);
+
    // Fill constants for now
    // TODO: Will need to change this
    rho_vec.setConstant(ph.get_rho());
    kappa_vec.setConstant(ph.get_kappa());
    temperature.setConstant(ph.get_T());
    B.resize(num_groups);
+
+   // 
                               
    correction = new Correction(parameter_handler, rho_vec, kappa_vec, temperature, e_edge, 
                                e_ave, de_ave, energy_discretization, m_mu, m_wt);
@@ -111,7 +122,6 @@ void Solver::compute_angle_integrated_density()
          phi_ref(g, cell_it) = 0.;
          for (int mu_it = 0; mu_it < M; mu_it++)
          {
-            // TODO: Change time variable hard coded here
             phi_ref(g, cell_it) += m_wt[mu_it] * psi_mat_ref(mu_it, g, cell_it);
          }
       }

@@ -51,6 +51,7 @@ configure_file("${PROJECT_SOURCE_DIR}/config/var-config.h.in" "${PROJECT_BINARY_
 ### Include Directories
 include_directories(include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 add_subdirectory(src)
 
 # Enable testing
