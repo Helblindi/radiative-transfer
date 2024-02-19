@@ -82,7 +82,7 @@ int main()
 
    // Print to file to be analyzed in python
    print_to_file("gray-test-phi.csv", phi);
-   print_to_file("gray-test-psi.csv", psi_mat);
+   // print_to_file("gray-test-psi.csv", psi_mat);
    print_to_file("gray-test-x.csv", x);
    print_to_file("gray-test-F.csv", F);
 

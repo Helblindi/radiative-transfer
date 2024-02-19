@@ -25,7 +25,7 @@ psi_source=4.0931 4.0931
 rho=1.;              # Material density
 kappa=1.;            # Absorption opacity
 T=1.;                # Material temperature
-V=0.;                # Material velocity, beta = V / c
+V=1.;                # Material velocity, beta = V / c
 
 # Correction terms options
 use_correction=true;
