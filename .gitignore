@@ -5,6 +5,7 @@
 .vscode
 radiative-transfer.code-workspace
 build/ 
+saved/
 
 # planckian functions
 planckian/
