@@ -16,6 +16,7 @@ static const double FOUR_PI                = 4.0*PI;
 static const double RADIATION_CONSTANT_A   = 1.3653104e-2;         // jk/(cm^3-keV^4)
 static const double KELVIN2KEV             = 8.6173281e-8;         // keV/K
 static const double NATURAL_LOG_2          = 0.6931471806;         // natural log of 2
+static const double validation_tolerance   = 1.E-6;
 
 using std::pow;
 static const double RADIATION_CONSTANT_A_LONG = (8.0*pow(PI,5)*pow(BOLTZMANN_CONSTANT,4))/

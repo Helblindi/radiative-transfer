@@ -2,9 +2,10 @@
 #define CORRECTION
 
 
-#include <constants.h>
-#include <compile_time_vals.h>
-#include <Planck.h>
+#include "constants.h"
+#include "ParameterHandler.h"
+#include "Planck.h"
+
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <cassert>
@@ -16,10 +17,10 @@ using namespace std;
 namespace rt
 {
 
-template<int num_groups>
 class Correction 
 {
 private:
+   ParameterHandler & ph;
    // Class variables
    const double ac = Constants::RADIATION_CONSTANT_A*Constants::SPEED_OF_LIGHT,
                 kcon = Constants::BOLTZMANN_CONSTANT_JPK,
@@ -27,7 +28,9 @@ private:
                 hcon = Constants::PLANCK_CONSTANT,
                 ccon = Constants::SPEED_OF_LIGHT;
    
-   const double T=ctv::T, kappa_grey=ctv::kappa_grey;
+   const double T=ph.get_T(), kappa_grey=ph.get_kappa_grey();
+
+   const int num_groups = ph.get_G();
 
    Planck planck;
    Eigen::VectorXd B, dBdT;               // Planck integrals
@@ -38,6 +41,9 @@ private:
    /* Unchanging energy group information, stored as references */
    Eigen::Ref<Eigen::VectorXd> e_edge_ref, e_ave_ref, de_ave_ref; 
    Eigen::Ref<Eigen::MatrixXd> energy_discretization_ref; 
+
+   /* Direction discretization, also references */
+   Eigen::Ref<Eigen::VectorXd> m_mu_ref, m_wt_ref;
 
    /****** 
     * Vector quantities needed from caller for correction terms 
@@ -71,13 +77,16 @@ private:
    bool validate_emission();
 
 public:
-   Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,
+   Correction(ParameterHandler & parameter_handler,
+              Eigen::Ref<Eigen::VectorXd> rho_vec,
               Eigen::Ref<Eigen::VectorXd> kappa_vec, 
               Eigen::Ref<Eigen::VectorXd> T_vec,
               Eigen::Ref<Eigen::VectorXd> e_edge,
               Eigen::Ref<Eigen::VectorXd> e_ave,
               Eigen::Ref<Eigen::VectorXd> de_ave,
-              Eigen::Ref<Eigen::MatrixXd> energy_discretization);
+              Eigen::Ref<Eigen::MatrixXd> energy_discretization,
+              Eigen::Ref<Eigen::VectorXd> m_mu,
+              Eigen::Ref<Eigen::VectorXd> m_wt);
    ~Correction() {}
    // TODO: Compute correction will need the updated rho, T
    bool validate_correction();

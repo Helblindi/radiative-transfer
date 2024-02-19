@@ -43,8 +43,14 @@ if (NOT CMAKE_CXX_COMPILER)
   endif()
 endif()
 
+# Set TRANSFER_DIR as a directory location that can be referred to in the C++ files using a configure file
+# https://cmake.org/cmake/help/latest/command/configure_file.html
+set(TRANSFER_DIR "${PROJECT_SOURCE_DIR}/")
+configure_file("${PROJECT_SOURCE_DIR}/config/var-config.h.in" "${PROJECT_BINARY_DIR}/var-config.h")
+
 ### Include Directories
 include_directories(include)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 add_subdirectory(src)
 
 # Enable testing

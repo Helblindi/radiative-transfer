@@ -1,0 +1,2 @@
+#cmakedefine TRANSFER_DIR_ENABLE
+#cmakedefine TRANSFER_DIR "@TRANSFER_DIR@"

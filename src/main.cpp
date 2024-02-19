@@ -1,11 +1,12 @@
+#include "ParameterHandler.h"
+#include "solver.h"
+#include "var-config.h"
+
 #include <iostream>
 #include <cmath>
 #include <fstream>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
-
-#include "compile_time_vals.h"
-#include "solver.h"
 
 using namespace std;
 using namespace rt;
@@ -22,19 +23,19 @@ using namespace rt;
 // }
 
 /* Function to display the parameters used */
-void display_input_quantities()
+void display_input_quantities(ParameterHandler & parameter_handler)
 {
    cout << "\n--- Input Parameters ---\n";
-   cout << "Quadrature order: " << ctv::M << endl;
-   cout << "Slab thickness: " << ctv::X << endl;
-   cout << "Number of cells: " << ctv::N << endl;
-   cout << "Material density: " << ctv::rho << endl;
-   cout << "Absorption opacity: " << ctv::kappa << endl;
-   cout << "Material temperature: " << ctv::T << endl;
+   cout << "Quadrature order: " << parameter_handler.get_M() << endl;
+   cout << "Slab thickness: " << parameter_handler.get_X() << endl;
+   cout << "Number of cells: " << parameter_handler.get_N() << endl;
+   cout << "Material density: " << parameter_handler.get_rho() << endl;
+   cout << "Absorption opacity: " << parameter_handler.get_kappa() << endl;
+   cout << "Material temperature: " << parameter_handler.get_T() << endl;
    cout << "Right boundary condition: ";
    
    // Output boundary conditions
-   switch(ctv::bc_right_indicator) {
+   switch(parameter_handler.get_bc_right_indicator()) {
       case 0: // vacuum
       {
          cout << "vacuum\n";
@@ -58,7 +59,7 @@ void display_input_quantities()
    }
 
    cout << "Left boundary condition: ";
-   switch(ctv::bc_left_indicator) {
+   switch(parameter_handler.get_bc_left_indicator()) {
       case 0: // vacuum
       {
          cout << "vacuum\n\n";
@@ -117,10 +118,31 @@ void print_to_file(const string filename, const Eigen::Matrix<Scalar_, rows, col
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
+   // Fetch input quantities
+   std::string filename;
+   if (argc == 2)
+   {
+      // Assume the used passed in a file to be read
+      filename = argv[1];
+   }
+   else if (argc == 1)
+   {
+      filename = std::string(TRANSFER_DIR) + "prm/default.prm";
+   }
+   else
+   {
+      // Too many arguments passed
+      cerr << "Too many command line arguments passed in.\n";
+   }
+   cout << "filename: " << filename << endl;
+   ParameterHandler parameter_handler(filename);
+   
    // Output all input quantities
-   display_input_quantities();
+   display_input_quantities(parameter_handler);
+
+   // assert(false);
 
    // TODO: change hardcoded time sizing variable.
    // 5 is necessary since there are 5 steps of psi that are saved
@@ -129,19 +151,23 @@ int main()
    //    2: psi^n+1/2 corrected
    //    3: psi^n+1 predicted
    //    4: psi^n+1 corrected
-   Eigen::Tensor<double, 3> psi_mat(ctv::M, ctv::G, ctv::N); // solution, angular intensity
+   int M = parameter_handler.get_M(),
+       N = parameter_handler.get_N(),
+       G = parameter_handler.get_G();
+
+   Eigen::Tensor<double, 3> psi_mat(M, G, N); // solution, angular intensity
    psi_mat.setConstant(0.);
-   Eigen::VectorXd x(ctv::N);              // Mesh
-   Eigen::MatrixXd phi(ctv::G, ctv::N);            // angle-integrated intensity
-   Eigen::MatrixXd F(ctv::G, ctv::N);              // radiative flux
+   Eigen::VectorXd x(N);              // Mesh
+   Eigen::MatrixXd phi(G, N);            // angle-integrated intensity
+   Eigen::MatrixXd F(G, N);              // radiative flux
 
    // Initialize the mesh
-   for (int i = 0; i < ctv::N; i++)
+   for (int i = 0; i < N; i++)
    {
-      x[i] = (i + 0.5) * ctv::dx;
+      x[i] = (i + 0.5) * parameter_handler.get_dx();
    }
 
-   Solver<ctv::G> solver(psi_mat, phi, F);
+   Solver solver(parameter_handler, psi_mat, phi, F);
    // cout << "Solver initiated.\n";
    solver.solve();
 

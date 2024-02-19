@@ -8,8 +8,7 @@ namespace rt
 // Photon energy E and temperature T are in units of keV
 // The returned value from this function has units
 // jk/(cm^2-sh-keV-steradian)
-template<int num_groups>
-double Correction<num_groups>::pf(double E, double T)
+double Correction::pf(double E, double T)
 {
    double h = Constants::PLANCK_CONSTANT;
    double c = Constants::SPEED_OF_LIGHT;
@@ -23,8 +22,7 @@ double Correction<num_groups>::pf(double E, double T)
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::generate_planck_integrals()
+void Correction::generate_planck_integrals()
 {
    // Generate Planck Integrals (keV/(cm^2-SH))
    planck.get_Planck(T, energy_discretization_ref, B, dBdT);
@@ -38,8 +36,7 @@ void Correction<num_groups>::generate_planck_integrals()
 }
 
 
-template<int num_groups>
-bool Correction<num_groups>::validate_planck_integrals()
+bool Correction::validate_planck_integrals()
 {
    // Check for proper sums of Planck integrals
    double bsum = 0., dbsum = 0.;
@@ -53,8 +50,8 @@ bool Correction<num_groups>::validate_planck_integrals()
    double dacT4=4.0*ac*pow(T,3);
 
    // These quantites must be the same
-   if (abs(acT4 - bsum) > ctv::validation_tolerance || 
-       abs(dacT4 - dbsum) > ctv::validation_tolerance)
+   if (abs(acT4 - bsum) > Constants::validation_tolerance || 
+       abs(dacT4 - dbsum) > Constants::validation_tolerance)
    {
       cout << "acT^4 = " << acT4 << " B sum = " << bsum << endl;
       cout << "4acT^3 = " << dacT4 << " dBdT sum = " << dbsum << "\n" << endl;
@@ -66,8 +63,7 @@ bool Correction<num_groups>::validate_planck_integrals()
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::generate_multigroup_opacities()
+void Correction::generate_multigroup_opacities()
 {
    double kappa_nfac,                         // Opacity normalization factor
           kappa_grey,                         // Grey opacity used to define total emission at a given temperature
@@ -107,8 +103,7 @@ void Correction<num_groups>::generate_multigroup_opacities()
 }
 
 
-template<int num_groups>
-bool Correction<num_groups>::validate_emission()
+bool Correction::validate_emission()
 {
    // Check for proper emission sum
    double acT4=ac*pow(T,4),
@@ -123,7 +118,7 @@ bool Correction<num_groups>::validate_emission()
    
 
    // total emission thould be equal to sigacT4
-   if (abs(emis_tot - sigacT4) > ctv::validation_tolerance)
+   if (abs(emis_tot - sigacT4) > Constants::validation_tolerance)
    {
       cout << "Total Emission = " << emis_tot 
            << " kappa_ref*acT^4 = " << sigacT4 << "\n"  << endl;
@@ -135,8 +130,7 @@ bool Correction<num_groups>::validate_emission()
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::compute_group_edge_opacities()
+void Correction::compute_group_edge_opacities()
 {
    // Compute group-edge opacities
    double wgt_L, wgt_R;       // Left and right weights for edge opacity generation
@@ -173,8 +167,7 @@ void Correction<num_groups>::compute_group_edge_opacities()
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::compute_components_of_correction_source()
+void Correction::compute_components_of_correction_source()
 {
    // Components of correction terms
    dEB(0) = e_edge_ref(1)*pf(e_edge_ref(1),T);
@@ -292,22 +285,28 @@ void Correction<num_groups>::compute_components_of_correction_source()
 }
 
 
-template<int num_groups>
-Correction<num_groups>::Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,
-                                   Eigen::Ref<Eigen::VectorXd> kappa_vec,
-                                   Eigen::Ref<Eigen::VectorXd> T_vec,
-                                   Eigen::Ref<Eigen::VectorXd> e_edge,
-                                   Eigen::Ref<Eigen::VectorXd> e_ave,
-                                   Eigen::Ref<Eigen::VectorXd> de_ave,
-                                   Eigen::Ref<Eigen::MatrixXd> energy_discretization) : 
+Correction::Correction(ParameterHandler & parameter_handler,
+                       Eigen::Ref<Eigen::VectorXd> rho_vec,
+                       Eigen::Ref<Eigen::VectorXd> kappa_vec,
+                       Eigen::Ref<Eigen::VectorXd> T_vec,
+                       Eigen::Ref<Eigen::VectorXd> e_edge,
+                       Eigen::Ref<Eigen::VectorXd> e_ave,
+                       Eigen::Ref<Eigen::VectorXd> de_ave,
+                       Eigen::Ref<Eigen::MatrixXd> energy_discretization,
+                       Eigen::Ref<Eigen::VectorXd> m_mu,
+                       Eigen::Ref<Eigen::VectorXd> m_wt) : 
+   ph(parameter_handler),
    rho_ref(rho_vec),
    kappa_ref(kappa_vec),
    T_ref(T_vec),
    e_edge_ref(e_edge),
    e_ave_ref(e_ave),
    de_ave_ref(de_ave),
-   energy_discretization_ref(energy_discretization)
+   energy_discretization_ref(energy_discretization),
+   m_mu_ref(m_mu),
+   m_wt_ref(m_wt)
 {
+   cout << "Correction constructor.\n";
    // Must resize all Eigen class variables
    B.resize(num_groups);
    dBdT.resize(num_groups);
@@ -321,24 +320,23 @@ Correction<num_groups>::Correction(Eigen::Ref<Eigen::VectorXd> rho_vec,
    dkapEB.resize(num_groups);
 
    kappa_edge.resize(num_groups+1);
-   cor1.resize(num_groups, ctv::N);
-   cor2.resize(num_groups, ctv::N);
-   cor3.resize(num_groups, ctv::N);
-   total_correction.resize(ctv::M, num_groups, ctv::N);
+   cor1.resize(num_groups, ph.get_N());
+   cor2.resize(num_groups, ph.get_N());
+   cor3.resize(num_groups, ph.get_N());
+   total_correction.resize(ph.get_M(), num_groups, ph.get_N());
 
    // All other helper functions depend on temperature, 
    // which will eventually change at each time step
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::compute_correction_terms()
+void Correction::compute_correction_terms()
 {
    // Note in this function there is no dependency on scattering angle. This is accounted for when the total correction is computed.
    // Need to add spatial dependence
    for(int g = 0; g < num_groups; g++)
    {
-      for (int cell_it = 0; cell_it < ctv::N; cell_it++)
+      for (int cell_it = 0; cell_it < ph.get_N(); cell_it++)
       {
          cor1(g, cell_it) = dsigEdE(g);
          cor2(g, cell_it) = 3.0*rho_ref(g)*kappa_ref(g)*B(g) - dkapEB(g);
@@ -370,15 +368,13 @@ void Correction<num_groups>::compute_correction_terms()
 }
 
 
-template<int num_groups>
-bool Correction<num_groups>::validate_correction()
+bool Correction::validate_correction()
 {
    return (validate_planck_integrals() && validate_emission());
 }
 
 
-template<int num_groups>
-void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 3>& intensities)
+void Correction::compute_correction(Eigen::Tensor<double, 3>& intensities)
 {
    // Script to run all helper functions
    generate_planck_integrals();
@@ -388,14 +384,14 @@ void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 3>& intens
    compute_correction_terms();
 
    // Finally put it all together
-   double mu = 0., beta = ctv::V / Constants::SPEED_OF_LIGHT, val = 0.;
+   double mu = 0., beta = ph.get_V() / Constants::SPEED_OF_LIGHT, val = 0.;
    // correction 
-   for (int mu_it = 0; mu_it < ctv::M; mu_it++)
+   for (int mu_it = 0; mu_it < ph.get_M(); mu_it++)
    {
-      double mu = ctv::G_x[mu_it];
+      double mu = m_mu_ref(mu_it);
       for (int g = 0; g < num_groups; g++)
       {
-         for (int cell_it = 0; cell_it < ctv::N; cell_it++)
+         for (int cell_it = 0; cell_it < ph.get_N(); cell_it++)
          {
             val = 0.;
             
@@ -408,8 +404,6 @@ void Correction<num_groups>::compute_correction(Eigen::Tensor<double, 3>& intens
    }
    
 }
-
-template class Correction<ctv::G>;
 
 } // End namespace rt
 

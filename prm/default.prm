@@ -1,0 +1,43 @@
+
+M=2                    # Quadrature order, even, num_directions
+# quadrature points can be derived from function
+# quadrature weights also can be derived from function
+
+# Energy Group specifics
+G=1                    # Num energy groups. 1 group corresponds to grey case
+efirst=.1              # right edge energy for first group (keV)
+elast=10.              # right edge energy for last group (keV)
+kappa_grey=1.          # Grey opacity
+
+# Spatial parameters
+X=1.                   # Slab thickness
+N=100                  # Number of cells
+# cell size can be computed dx = X / N
+
+# Boundary Conditions
+bc_left_indicator=2    # vacuum - 0, // TODO: Change this to an array that matches M / 2
+                       # source - 1, 
+                       # reflective - 2 
+bc_right_indicator=1   # vacuum - 0, // TODO: Change this to an array that matches M / 2
+                       # source - 1, 
+                       # reflective - 2 s
+psi_source=1.1 2.1     # Source boundary conditions, separated by spaces
+
+# Physics
+rho=1.;              # Material density
+kappa=1.;            # Absorption opacity
+T=1.;                # Material temperature
+V=0.;                # Material velocity, beta = V / c
+
+# Correction terms options
+use_correction=false;
+
+# Time Stepping Options
+ts_method=3            # 1 - Strictly Backward Euler, 2 - Strictly CN, 3 - BDF2
+dt=0.00001             # timestep size
+max_timesteps=1000     # max number of timesteps
+
+# If either boundary indicator is source, those values need to be specified
+#test_bc = Constants::RADIATION_CONSTANT_A * Constants::SPEED_OF_LIGHT * pow(T, 4) / (Constants::FOUR_PI);
+#psi_source[M] = {4.0931, 4.0931};
+

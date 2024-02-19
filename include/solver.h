@@ -2,19 +2,30 @@
 #define SOLVER
 
 #include "constants.h"
-#include "compile_time_vals.h"
+#include "ParameterHandler.h"
 #include "correction.h"
+#include "GLQuad.h"
+
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
 namespace rt
 {
-template<int num_groups>
 class Solver
 {
 private:
+   Eigen::VectorXd psi_source = Eigen::VectorXd(2);
+   ParameterHandler & ph;
+   int M, N, num_groups;
+   double dx, dt;
+
+   // Direction quadrature, to also be used in Correction
+   Eigen::VectorXd m_mu, m_wt;
+
    const double ac = Constants::RADIATION_CONSTANT_A*Constants::SPEED_OF_LIGHT;
    Eigen::Tensor<double, 3>& psi_mat_ref;         // solution, angular intensity ref
    Eigen::Ref<Eigen::MatrixXd> phi_ref;           // angle-integrated intensity ref
@@ -40,10 +51,10 @@ private:
    Eigen::VectorXd _rhs, _res;
    /* ============ end main ============ */
 
-   Correction<num_groups> * correction;
+   Correction * correction;
    Eigen::Tensor<double, 3> total_correction;
    double logfac;
-   double efirst=ctv::efirst, elast=ctv::elast;
+   double efirst, elast;
    Eigen::VectorXd e_edge, e_ave, de_ave; // Group edge, average energies, and average group widths in kev
    Eigen::MatrixXd energy_discretization; // Left and right edges of energy groups
    Eigen::VectorXd balance;
@@ -60,7 +71,8 @@ private:
 public:
    void generate_group_edges_and_averages(); // inherited from Correction class
    void fill_energy_bound_arrays();          // inherited from Correction class
-   Solver(Eigen::Tensor<double, 3>& psi_mat,
+   Solver(ParameterHandler & parameter_handler,
+          Eigen::Tensor<double, 3>& psi_mat,
           Eigen::Ref<Eigen::MatrixXd> phi,
           Eigen::Ref<Eigen::MatrixXd> F);
           

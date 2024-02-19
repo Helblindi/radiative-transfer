@@ -8,14 +8,14 @@ def main():
    # plt::figure_size(1200, 780);
 
    # // Create vectors for python to use
-   # vector<double> y_py(ctv::N);
-   # vector<double> F_py(ctv::N);
+   # vector<double> y_py(ph.get_N());
+   # vector<double> F_py(ph.get_N());
    # vector<double> x_py(x.data(), x.data() + x.rows() * x.cols());
 
-   # for (int i = 0; i < ctv::M; i++)
+   # for (int i = 0; i < ph.get_M(); i++)
    # {
    #    double mu = ctv::G_x[i];
-   #    for (int j = 0; j < ctv::N; j++)
+   #    for (int j = 0; j < ph.get_N(); j++)
    #    {
    #       y_py[j] = psi_mat(i,j);
    #    }
@@ -24,7 +24,7 @@ def main():
    #    // plt::scatter(x, y_py);
    # }
 
-   # for (int i = 0; i < ctv::N; i++)
+   # for (int i = 0; i < ph.get_N(); i++)
    # {
    #    y_py[i] = phi[i];
    #    F_py[i] = F[i];

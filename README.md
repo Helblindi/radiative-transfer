@@ -8,3 +8,8 @@ The radiative-transfer miniapp relies on the following packages and libraries:
   > https://gitlab.com/libeigen/eigen
   
   Also a brew installable package.
+
+- Param (a C++ parameter handler class)
+
+  > https://github.com/kaityo256/param
+  
