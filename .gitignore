@@ -13,5 +13,8 @@ planckian/
 #Unknown
 .DS_Store
 
+#test prm file
+prm/test.prm
+
 #compile commands
 compile_commands.json
