@@ -31,22 +31,28 @@ void ParameterHandler::get_parameters()
 
    bc_left_indicator = param.get<int>("bc_left_indicator", 2);
    bc_right_indicator = param.get<int>("bc_right_indicator", 1);
+   use_mg_equilib = param.get<bool>("use_mg_equilib", false);
 
    // Handle possible source conditions via stream stream
-   string psi_source_s = param.get<string>("psi_source", "no_sources_provided");
-   stringstream psi_source_ss(psi_source_s);
-   double temp_d;
-   int counter = 0;
-   while (psi_source_ss >> temp_d)
+   // Only need to explicitly read in source conditions if we
+   // are not using equilibrium source conditions
+   if (!use_mg_equilib)
    {
-      psi_source[counter] = temp_d;
-      counter++;
+      psi_source.resize(M);
+      string psi_source_s = param.get<string>("psi_source", "no_sources_provided");
+      stringstream psi_source_ss(psi_source_s);
+      double temp_d;
+      int counter = 0;
+      while (psi_source_ss >> temp_d)
+      {
+         psi_source[counter] = temp_d;
+         counter++;
+      }
+      for (int i = 0; i < psi_source.size(); i++)
+      {
+         cout << "psi_source[" << i << "]: " << psi_source[i] << endl;
+      }
    }
-   for (int i = 0; i < psi_source.size(); i++)
-   {
-      cout << "psi_source[" << i << "]: " << psi_source[i] << endl;
-   }
-
 
    rho = param.get<double>("rho", 1.);
    kappa = param.get<double>("kappa", 1.);

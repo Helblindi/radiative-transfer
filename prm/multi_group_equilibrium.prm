@@ -1,0 +1,45 @@
+#####
+#
+# Parameter file
+# File is case sensitive.  Also, spaces are CRUCIAL.
+# Do not leave a space after parameters.
+# See default.prm for description of variables.
+#
+#####
+
+##### Angle       
+M=2
+
+##### Energy Group specifics
+G=4
+efirst=.1
+elast=10.
+kappa_grey=1.
+
+##### Spatial parameters
+X=1.
+N=100
+
+##### Boundary Conditions
+bc_left_indicator=2
+bc_right_indicator=1
+
+##### Equilibrium testing
+use_mg_equilib=true
+
+##### Source conditions
+psi_source=1. 2.
+
+##### Physics
+rho=2.
+kappa=1.
+T=1.
+V=0.
+
+##### Correction terms options
+use_correction=true
+
+##### Time Stepping Options
+ts_method=3
+dt=0.00001
+max_timesteps=50

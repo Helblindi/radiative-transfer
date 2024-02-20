@@ -7,7 +7,9 @@ namespace parameter
    if (!contains(key)) {
       return value;
    }
-   if ("yes" == params[key] || "Yes" == params[key]) {
+   if ("yes" == params[key] || "Yes" == params[key] ||
+       "true" == params[key] || "True" == params[key]) {
+         std::cout << "Found " << key << " to be true.\n";
       return true;
    } else {
       return false;

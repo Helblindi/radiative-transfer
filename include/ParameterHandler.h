@@ -26,12 +26,13 @@ private:
    int N;                            // Number of cells
    double dx;                         // cell size
    int bc_left_indicator;              // vacuum - 0, // TODO: Change this to an array that matches M / 2
-                                                        // source - 1, 
-                                                        // reflective - 2 
+                                       // source - 1, 
+                                       // reflective - 2 
    int bc_right_indicator;             // vacuum - 0, // TODO: Change this to an array that matches M / 2
-                                                        // source - 1, 
-                                                        // reflective - 2 s
-   Eigen::VectorXd psi_source = Eigen::VectorXd(2);
+                                       // source - 1, 
+                                       // reflective - 2 s
+   bool use_mg_equilib;
+   Eigen::VectorXd psi_source = Eigen::VectorXd(2); // TODO: Change to matrix of size MxG
 
    double rho;                        // Material density
    double kappa;                      // Absorption opacity

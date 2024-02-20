@@ -56,6 +56,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
    elast = ph.get_elast();
 
    cout << "pre get psi source\n";
+   psi_source.resize(M); // TODO: psi_source should be a matrix of size MxG
    ph.get_psi_source(psi_source);
    cout << "post get psi source\n";
 
