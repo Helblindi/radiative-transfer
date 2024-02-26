@@ -66,7 +66,6 @@ bool Correction::validate_planck_integrals()
 void Correction::generate_multigroup_opacities()
 {
    double kappa_nfac,                         // Opacity normalization factor
-          kappa_grey,                         // Grey opacity used to define total emission at a given temperature
           tmp1, tmp2;                         // Temporary variables
    
    // Compute unnormalized opacities and group-centered opacities
@@ -93,11 +92,6 @@ void Correction::generate_multigroup_opacities()
    {
       kappa_ref(g) = kappa_grey*kappa_nfac*ukappa(g);
       emis_spec(g) = kappa_ref(g)*B(g);
-  
-      // cout << left << setw(7)  << g 
-      //      << left << setw(14) << e_ave_ref(g)
-      //      << left << setw(15) << kappa_ref(g)
-      //      << left << setw(15) << emis_spec(g) << endl; 
    }
    // cout << "\n" << endl;
 }
@@ -403,6 +397,208 @@ void Correction::compute_correction(Eigen::Tensor<double, 3>& intensities)
       }
    }
    
+}
+
+
+void Correction::Print()
+{
+   cout << "========== Correction::Print() ==========\n";
+   cout << "Contants:\n";
+   cout << "\tT: " << T << endl;
+   cout << "\tkappa_grey: " << kappa_grey << endl;
+   cout << "\tG: " << num_groups << endl;
+
+   //---------------------------------------------
+   // PRINT ENERGY GROUP EDGES AND AVERAGES IN KEV
+   //---------------------------------------------
+   cout << left << setw(13) << "Group Index" 
+        << left << setw(16) << "Average Energy" 
+        << left << setw(14) << "Upper Energy" 
+        << left << setw(13) << "Group Width" << endl;
+   cout << left << setw(13) << "-----------"
+        << left << setw(16) << "(keV)---------" 
+        << left << setw(14) << "(keV)-------" 
+     	 << left << setw(13) << "(keV)------" << endl;
+   for(int g = 0;g < num_groups;++g)
+   {
+      cout << left << setw(13) << g
+    	     << left << setw(16) << e_ave_ref(g) 
+           << left << setw(14) << e_edge_ref(g+1) 
+           << left << setw(13) << de_ave_ref(g) << endl;
+   }
+   cout << "\n" << endl;	
+
+   //---------------------------------------------
+   // PRINT PLANCK INTEGRALS
+   //---------------------------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "EG Min"
+        << left << setw(14) << "EG Max"
+        << left << setw(14) << "B"
+        << left << setw(22) << "dBdT" << endl;
+
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "(keV)-"
+        << left << setw(14) << "(keV)-"
+        << left << setw(14) << "(jk/cm^2-sh)"
+        << left << setw(18) << "(jk/cm^2-sh-keV)" << endl;
+
+   for(int g = 0;g < num_groups;++g)
+   {
+      cout << left << setw(7)  << g 
+	        << left << setw(14) << energy_discretization_ref(g,0) 
+	        << left << setw(14) << energy_discretization_ref(g,1)
+	        << left << setw(14) << B(g)
+	        << left << setw(18) << dBdT(g) << endl;  
+   }
+   cout << "\n" << endl;
+
+   //----------------------------------------------------------
+   // PRINT UNNORMALIZED OPACITIES AND GROUP-CENTERED OPACITIES
+   //----------------------------------------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "Energy"
+        << left << setw(25) << "Planck-Averaged Opacity"
+        << left << setw(24) << "Group-Centered Opacity" << endl; 
+
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "(keV)-"
+        << left << setw(25) << "(cm^2/g)---------------"
+        << left << setw(24) << "(cm^2/g)--------------" << endl;
+         
+   for(int g = 0;g < num_groups;++g)
+   {
+      cout << left << setw(7)  << g 
+           << left << setw(14) << e_ave_ref(g)
+           << left << setw(25) << ukappa(g)
+           << left << setw(24) << ckappa(g) << endl; 
+   }
+
+   cout << "\n" << endl;
+
+   //--------------------------------------------------------
+   // PRINT FINAL OPACITIES AND EMISSION SPECTRUM
+   //--------------------------------------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "Energy"
+        << left << setw(15) << "Final Opacity"
+        << left << setw(15) << "Emission Spec" << endl; 
+
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "(keV)-"
+        << left << setw(15) << "(cm^2/g)-----"
+        << left << setw(15) << "(jk-g-sh)----" << endl;
+
+   for(int g = 0;g < num_groups;g++)
+   {
+      cout << left << setw(7)  << g 
+           << left << setw(14) << e_ave_ref(g)
+           << left << setw(15) << kappa_ref(g)
+           << left << setw(15) << emis_spec(g) << endl; 
+   }
+   cout << "\n" << endl;
+
+   //-------------------------------
+   // PRINT ENERGY DIFFERENCES OF EB
+   //-------------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "Energy" 
+        << left << setw(14) << "dEB" << endl;
+         
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "------" 
+        << left << setw(14) << "-----" << endl;
+         
+      
+   for(int g = 0;g < num_groups;g++)
+   {
+      cout << left << setw(7)  << g 
+           << left << setw(14) << e_ave_ref(g) 
+           << left << setw(14) << dEB(g) << endl;
+   }
+   cout << "\n" << endl;
+
+   //---------------------------
+   // PRINT GROUP EDGE OPACITIES
+   //---------------------------
+   cout << left << setw(12) << "Edge Index"
+        << left << setw(14) << "Energy" 
+        << left << setw(14) << "Opacity" << endl;
+         
+   cout << left << setw(12) << "---------"
+        << left << setw(14) << "------" 
+        << left << setw(14) << "-------" << endl;
+         
+      
+   for(int g = 0;g < num_groups+1;g++)
+   {
+      cout << left << setw(12) << g 
+           << left << setw(14) << e_edge_ref(g) 
+           << left << setw(14) << kappa_edge(g) << endl;
+   }
+   cout << "\n" << endl;
+
+   //-----------------------------------
+   //  CHECK FOR ZERO SUM OF DIFFERENCES
+   //-----------------------------------
+   double sum = 0.0, sumabs = 0.;   
+   for(int g = 0;g < num_groups;g++)
+   {
+      sum += dkapEB(g);
+      sumabs += fabs(dkapEB(g));
+   }
+   sum=sum/sumabs;
+   //-----------
+   //  PRINT SUM
+   //-----------
+   cout << "Sum dkapEB/Sum |dkapEB| = " << sum << "\n" << endl;
+
+   //-------------------------------------
+   //  PRINT ENERGY DERIVATIVES OF sigma E
+   //-------------------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "Energy" 
+        << left << setw(14) << "dsigEdE" << endl;
+         
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "------" 
+        << left << setw(14) << "-------" << endl;
+         
+   for(int g = 0;g < num_groups;g++)
+   {
+      cout << left << setw(7)  << g 
+           << left << setw(14) << e_ave_ref(g) 
+           << left << setw(14) << dsigEdE(g) << endl;
+   }
+   cout << "\n" << endl;
+
+   //------------------------
+   //  PRINT CORRECTION TERMS
+   //------------------------
+   cout << left << setw(7)  << "Group"
+        << left << setw(14) << "Energy" 
+        << left << setw(14) << "cor1" 
+        << left << setw(14) << "cor2" 
+        << left << setw(14) << "cor3" << endl;
+   
+         
+   cout << left << setw(7)  << "-----"
+        << left << setw(14) << "------" 
+        << left << setw(14) << "----" 
+        << left << setw(14) << "----" 
+        << left << setw(14) << "----" << endl;
+         
+      
+   for(int g = 0;g < num_groups;g++)
+   {
+      cout << left << setw(7)  << g 
+           << left << setw(14) << e_ave_ref(g) 
+           << left << setw(14) << cor1(g) 
+           << left << setw(14) << cor2(g) 
+           << left << setw(14) << cor3(g) << endl;
+   }
+
+   cout << "\n" << endl;
 }
 
 } // End namespace rt

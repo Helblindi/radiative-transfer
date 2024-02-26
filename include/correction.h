@@ -103,6 +103,7 @@ public:
    {
       dEB = this->dEB;
    }
+   void Print();
 };
 
 } // End namespace rt
