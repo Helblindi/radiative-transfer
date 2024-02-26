@@ -42,27 +42,54 @@ def main():
    df_x = pd.read_csv("../build/x.csv", sep=',', header=None)
    df_phi = pd.read_csv("../build/phi.csv", delim_whitespace=True, header=None)
    df_F = pd.read_csv("../build/F.csv", delim_whitespace=True, header=None)
+   df_psi = pd.read_csv("../build/psi.csv", delim_whitespace=True, header=None)
 
    num_G = df_phi.shape[0]
    num_N = df_phi.shape[1]
+   num_M = df_psi.shape[0]
 
    print("num groups: ", num_G)
    print("num_cells: ", num_N)
+   print("num_dir: ", num_M)
 
    x_arr = df_x.to_numpy()[:,0] # delimeter for x.csv was newline char
    phi_arr = df_phi.to_numpy()[0]
    
+   # F
    for g in range(num_G):
       F_arr_g = df_F.to_numpy()[g]
-      print("F for g: ", F_arr_g)
+      # print("F for g: ", F_arr_g)
       _label="F, g=" + str(g)
       plt.plot(x_arr, F_arr_g,label=_label)
 
-   # print(df_phi)
-
    # plt.plot(x_arr, phi_arr)
    plt.legend()
-   plt.show()
+   plt.savefig("F.png")
+   plt.clf()
+
+   # phi
+   for g in range(num_G):
+      phi_arr_g = df_phi.to_numpy()[g]
+      _label = "phi, g=" + str(g)
+      plt.plot(x_arr, phi_arr_g, label=_label)
+   
+   plt.legend()
+   plt.savefig("phi.png")
+   plt.clf()
+
+   # psi 
+   for m in range(num_M):
+      psi_arr_m = df_psi.to_numpy()[m]
+      for g in range(num_G):
+         psi_arr_m_g = psi_arr_m[g::num_G]
+         _label = "psi, m=" + str(m) + ", g = " + str(g)
+         plt.scatter(x_arr, psi_arr_m_g, label=_label, s=15)
+   
+   plt.legend()
+   plt.savefig("psi.png")
+   # plt.show()
+   plt.clf()
+
 
    return 
 
