@@ -37,7 +37,8 @@ private:
    Eigen::Tensor<double, 4> prev_ends;            // (n)
    Eigen::Tensor<double, 4> half_ends;            // (n+1/2) Used in BDF2 stepping
    Eigen::VectorXd rho_vec, kappa_vec, temperature;
-   Eigen::VectorXd B, dEB;                        // Planckian terms by group, these are computed in the correction class
+   Eigen::VectorXd B;                             // Planckian terms by group, computed in the Correction class
+   Eigen::VectorXd dEB;                           // (d(EB)/dE)_g * Delta E_g, computed in the Correction class
 
    /* Vals needed for iteration */
    bool half_step = true;

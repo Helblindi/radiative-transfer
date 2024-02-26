@@ -206,16 +206,15 @@ void Solver::computeEquilibriumSources()
    {
       for (int g = 0; g < num_groups; g++)
       {
-         double val = 4 * B(g) - dEB(g)*de_ave(g);
-         cout << "v/c terms(1): " << val << endl;
+         double val = 4 * B(g) - dEB(g); // dEB represents the derivative of EB multiply by energy group width
+         // cout << "v/c terms(1): " << val << endl;
          double _mult = m_mu(i) * ph.get_V() / Constants::SPEED_OF_LIGHT;
-         cout << "m_mu: " << m_mu(i) << ", V: " << ph.get_V() << ", c: " << Constants::SPEED_OF_LIGHT << endl;
-         cout << "_mult: " << _mult << endl;
+         // cout << "m_mu: " << m_mu(i) << ", V: " << ph.get_V() << ", c: " << Constants::SPEED_OF_LIGHT << endl;
+         // cout << "_mult: " << _mult << endl;
          val *=  _mult;
-         // double val = (4 * B(g) - dEB(g)) * m_mu(i) * ph.get_V() / Constants::SPEED_OF_LIGHT;
-         cout << "v/c terms(2): " << val << endl;
+         // cout << "v/c terms(2): " << val << endl;
          val += B(g);
-         cout << "de_ave(g): " << de_ave(g) << endl;
+         // cout << "de_ave(g): " << de_ave(g) << endl;
          cout << "source condition for mu: " << m_mu(i) << " and group " << g << ": " << val << endl;
          // psi_source[i,g] = val;
          psi_source(i,g) = val;
