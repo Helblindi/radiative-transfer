@@ -140,17 +140,8 @@ int main(int argc, char **argv)
    ParameterHandler parameter_handler(filename);
    
    // Output all input quantities
-   display_input_quantities(parameter_handler);
+   display_input_quantities(parameter_handler); // TODO: change this function to ParameterHandler class
 
-   // assert(false);
-
-   // TODO: change hardcoded time sizing variable.
-   // 5 is necessary since there are 5 steps of psi that are saved
-   //    0: psi^n
-   //    1: psi^n+1/2 predicted
-   //    2: psi^n+1/2 corrected
-   //    3: psi^n+1 predicted
-   //    4: psi^n+1 corrected
    int M = parameter_handler.get_M(),
        N = parameter_handler.get_N(),
        G = parameter_handler.get_G();
@@ -180,7 +171,7 @@ int main(int argc, char **argv)
 
    // Print to file to be analyzed in python
    print_to_file("phi.csv", phi);
-   // print_to_file("psi.csv", psi_mat);
+   print_to_file("psi.csv", psi_mat);
    print_to_file("x.csv", x);
    print_to_file("F.csv", F);
 
