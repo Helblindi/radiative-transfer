@@ -36,21 +36,19 @@ void ParameterHandler::get_parameters()
    // Handle possible source conditions via stream stream
    // Only need to explicitly read in source conditions if we
    // are not using equilibrium source conditions
+   psi_source.resize(M,G);
    if (!use_mg_equilib)
    {
-      psi_source.resize(M);
       string psi_source_s = param.get<string>("psi_source", "no_sources_provided");
       stringstream psi_source_ss(psi_source_s);
       double temp_d;
       int counter = 0;
       while (psi_source_ss >> temp_d)
       {
-         psi_source[counter] = temp_d;
+         // Get rows/cols
+         int _m = counter / G, _g = counter % G; 
+         psi_source(_m, _g) = temp_d;
          counter++;
-      }
-      for (int i = 0; i < psi_source.size(); i++)
-      {
-         cout << "psi_source[" << i << "]: " << psi_source[i] << endl;
       }
    }
 
@@ -66,10 +64,9 @@ void ParameterHandler::get_parameters()
    max_timesteps = param.get<int>("max_timesteps", 1000);
 }
 
-void ParameterHandler::get_psi_source(Eigen::Ref<Eigen::VectorXd> psi_source)
+void ParameterHandler::get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source)
 {
-   for (int i = 0; i < this->psi_source.size(); i++)
-   {
-      psi_source[i] = this->psi_source[i];
-   }
+   cout << "shape of reference psi source: " << psi_source.rows() << "," << psi_source.cols() << endl;
+   cout << "shape of class psi source: " << this->psi_source.rows() << "," << this->psi_source.cols() << endl;
+   psi_source = this->psi_source;
 }

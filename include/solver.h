@@ -18,7 +18,7 @@ namespace rt
 class Solver
 {
 private:
-   Eigen::VectorXd psi_source = Eigen::VectorXd(2);
+   Eigen::MatrixXd psi_source;
    ParameterHandler & ph;
    int M, N, num_groups;
    double dx, dt;
@@ -37,7 +37,7 @@ private:
    Eigen::Tensor<double, 4> prev_ends;            // (n)
    Eigen::Tensor<double, 4> half_ends;            // (n+1/2) Used in BDF2 stepping
    Eigen::VectorXd rho_vec, kappa_vec, temperature;
-   Eigen::VectorXd B;                             // Planckian terms by group, these are computed in the correction class
+   Eigen::VectorXd B, dEB;                        // Planckian terms by group, these are computed in the correction class
 
    /* Vals needed for iteration */
    bool half_step = true;
@@ -58,6 +58,9 @@ private:
    Eigen::VectorXd e_edge, e_ave, de_ave; // Group edge, average energies, and average group widths in kev
    Eigen::MatrixXd energy_discretization; // Left and right edges of energy groups
    Eigen::VectorXd balance;
+
+   /* Equilibrium source terms */
+   void computeEquilibriumSources();
 
    /* ***** Time Stepping ***** */
    void backwardEuler(const int cell, const int scatteredDirIt, const int groupIt, 

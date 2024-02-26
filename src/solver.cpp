@@ -55,10 +55,13 @@ Solver::Solver(ParameterHandler & parameter_handler,
    efirst = ph.get_efirst();
    elast = ph.get_elast();
 
-   cout << "pre get psi source\n";
-   psi_source.resize(M); // TODO: psi_source should be a matrix of size MxG
-   ph.get_psi_source(psi_source);
-   cout << "post get psi source\n";
+   psi_source.resize(M,num_groups);
+
+   // if necessary, get source conditions
+   if (ph.get_bc_left_indicator() == 1 || ph.get_bc_right_indicator() == 1)
+   {
+      ph.get_psi_source(psi_source);
+   }
 
    // Set up quadrature 
    GLQuad quad(M, Constants::FOUR_PI);
@@ -101,6 +104,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
    rho_vec.setConstant(ph.get_rho());
    kappa_vec.setConstant(ph.get_kappa());
    temperature.setConstant(ph.get_T());
+   dEB.resize(num_groups);
    B.resize(num_groups);
 
    // 
@@ -192,6 +196,34 @@ void Solver::compute_balance()
 }
 
 
+void Solver::computeEquilibriumSources()
+{
+   correction->compute_correction(psi_mat_ref);
+   assert(correction->validate_correction() && "Invalid Correction Terms\n");
+   correction->get_B(this->B);
+   correction->get_dEB(this->dEB);
+   for (int i = 0; i < M; i++)
+   {
+      for (int g = 0; g < num_groups; g++)
+      {
+         double val = 4 * B(g) - dEB(g)*de_ave(g);
+         cout << "v/c terms(1): " << val << endl;
+         double _mult = m_mu(i) * ph.get_V() / Constants::SPEED_OF_LIGHT;
+         cout << "m_mu: " << m_mu(i) << ", V: " << ph.get_V() << ", c: " << Constants::SPEED_OF_LIGHT << endl;
+         cout << "_mult: " << _mult << endl;
+         val *=  _mult;
+         // double val = (4 * B(g) - dEB(g)) * m_mu(i) * ph.get_V() / Constants::SPEED_OF_LIGHT;
+         cout << "v/c terms(2): " << val << endl;
+         val += B(g);
+         cout << "de_ave(g): " << de_ave(g) << endl;
+         cout << "source condition for mu: " << m_mu(i) << " and group " << g << ": " << val << endl;
+         // psi_source[i,g] = val;
+         psi_source(i,g) = val;
+      }
+   }
+}
+
+
 /*** Time Stepping functions ***/
 void Solver::backwardEuler(
    const int cell, const int scatteredDirIt, const int groupIt, 
@@ -263,7 +295,6 @@ void Solver::backwardEuler(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hardcoded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
       // cout << "psi_mat_ref(scatteredDirIt,groupIt,cell,0): " << psi_mat_ref(scatteredDirIt,groupIt,cell,0) << endl;
 
@@ -318,7 +349,6 @@ void Solver::crankNicolson(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hard coded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
@@ -353,7 +383,6 @@ void Solver::crankNicolson(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hardcoded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
@@ -411,7 +440,6 @@ void Solver::bdf(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hard coded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
@@ -451,7 +479,6 @@ void Solver::bdf(
       _res = _mat_inverse * _rhs;
 
       // put the average of val and local boundary here
-      // TODO: Fix hardcoded time param
       psi_mat_ref(scatteredDirIt,groupIt,cell) = 0.5*(_res[0] + _res[1]);
 
       ends(scatteredDirIt,groupIt,cell,0) = _res[0];
@@ -479,17 +506,20 @@ void Solver::solve()
       _max_timesteps *= 4;
    }
 
+   // Optionally, compute the equilibrium source terms
+   if (ph.get_use_mg_equilib())
+   {
+      computeEquilibriumSources();
+   }
+
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
       correction->compute_correction(psi_mat_ref);
       assert(correction->validate_correction() && "Invalid Correction Terms\n");
       correction->get_B(this->B);
-      cout << "B: " << B << endl;
-      // assert(false);
       if (ph.get_use_correction())
       {
          correction->get_correction(this->total_correction);
-         // CORTODO: If we don't want to use correction, we still need to compute B.
       }
       
       if (ph.get_ts_method() != 3 || _it % 4 == 0)
@@ -527,7 +557,7 @@ void Solver::solve()
                   }
                   case 1: // source
                   {
-                     bdry_cond = psi_source(i);
+                     bdry_cond = psi_source(i,g);
                      break;
                   }
                   default:
@@ -546,8 +576,7 @@ void Solver::solve()
                   }
                   case 1: // source
                   {
-                     // TODO: Fix source conditions from parameter
-                     bdry_cond = psi_source[i];
+                     bdry_cond = psi_source(i,g);
                      break;
                   }
                   case 2: // reflective
@@ -685,12 +714,12 @@ void Solver::solve()
                   } // end ts_method
                } // end mu > 0
             } // end sweep
-            if (mu < 0) {
-               cout << "Final psi(" << g << ") for mu " << mu << " is: " << ends(i,g,0,0) << endl;
-            } else {
-               cout << "Final psi(" << g << ") for mu " << mu << " is: " << ends(i,g,N-1,1) << endl;
-            }
-            cout << "Corresponding source condition was: " << psi_source[i] << endl;
+            // if (mu < 0) {
+            //    cout << "Final psi(" << g << ") for mu " << mu << " is: " << ends(i,g,0,0) << endl;
+            // } else {
+            //    cout << "Final psi(" << g << ") for mu " << mu << " is: " << ends(i,g,N-1,1) << endl;
+            // }
+            // cout << "Corresponding source condition was: " << psi_source[i] << endl;
          } // End group iterator  
       } // End scattered direction loop
    } // End time loop

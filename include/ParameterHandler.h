@@ -32,7 +32,7 @@ private:
                                        // source - 1, 
                                        // reflective - 2 s
    bool use_mg_equilib;
-   Eigen::VectorXd psi_source = Eigen::VectorXd(2); // TODO: Change to matrix of size MxG
+   Eigen::MatrixXd psi_source; 
 
    double rho;                        // Material density
    double kappa;                      // Absorption opacity
@@ -66,6 +66,7 @@ public:
    double get_dx() { return dx; }
    int get_bc_left_indicator() { return bc_left_indicator; }
    int get_bc_right_indicator() { return bc_right_indicator; }
+   bool get_use_mg_equilib() { return use_mg_equilib; }
    double get_rho() { return rho; }
    double get_kappa() { return kappa; }
    double get_T() { return T; }
@@ -74,7 +75,7 @@ public:
    int get_ts_method() { return ts_method; }
    double get_dt() { return dt; }
    int get_max_timesteps() { return max_timesteps; }
-   void get_psi_source(Eigen::Ref<Eigen::VectorXd> psi_source);
+   void get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source);
 };
 
 #endif

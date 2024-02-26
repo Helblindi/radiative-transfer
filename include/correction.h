@@ -99,6 +99,10 @@ public:
    {
       B = this->B;
    }
+   void get_dEB(Eigen::Ref<Eigen::VectorXd> dEB)
+   {
+      dEB = this->dEB;
+   }
 };
 
 } // End namespace rt
