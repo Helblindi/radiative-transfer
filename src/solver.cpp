@@ -722,6 +722,8 @@ void Solver::solve()
          } // End group iterator  
       } // End scattered direction loop
    } // End time loop
+
+   // correction->Print();
 }
 
 } // End ns rt
