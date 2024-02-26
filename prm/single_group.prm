@@ -30,10 +30,10 @@ psi_source=4.0931 4.0931
 rho=1.
 kappa=1.
 T=1.
-V=1.
+V=0.
 
 # Correction terms options
-use_correction=false
+use_correction=true
 
 # Time Stepping Options
 ts_method=3
