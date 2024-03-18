@@ -225,8 +225,8 @@ void Solver::compute_balance()
 
       for (int cell_it = 0; cell_it < N; cell_it++)
       {
-         _abs += rho_vec[cell_it] * kappa_vec[cell_it] * phi_ref(g,cell_it) * dx;
-         _src += rho_vec[cell_it] * kappa_vec[cell_it] * ac * pow(temperature[cell_it],4) * dx;
+         _abs += rho_vec[g] * kappa_vec[g] * phi_ref(g,cell_it) * dx;
+         _src += rho_vec[g] * kappa_vec[g] * ac * pow(temperature[g],4) * dx;
       }
 
       double sources = jN_half_plus + j_half_minus + _abs;
@@ -277,7 +277,7 @@ void Solver::backwardEuler(
    const double timestep, const double mu)
 {
    // Constants are the same regardless of direction
-   double const_A = 1. + Constants::SPEED_OF_LIGHT*timestep*rho_vec[cell] * kappa_vec[cell];
+   double const_A = 1. + Constants::SPEED_OF_LIGHT*timestep*rho_vec[groupIt] * kappa_vec[groupIt];
    double const_B = Constants::SPEED_OF_LIGHT*timestep*mu;
 
    if (mu < 0)
@@ -290,7 +290,7 @@ void Solver::backwardEuler(
       _mat(1,1) = _temp_val;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
@@ -327,7 +327,7 @@ void Solver::backwardEuler(
       // cout << _mat << endl;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
@@ -364,7 +364,7 @@ void Solver::crankNicolson(
    const int cell, const int scatteredDirIt, const int groupIt, 
    const double timestep, const double mu)
 {
-   double _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * rho_vec[cell] * kappa_vec[cell];
+   double _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * rho_vec[groupIt] * kappa_vec[groupIt];
 
    double const_A = 0.5 * Constants::SPEED_OF_LIGHT * mu * timestep;
    double const_B = 1 + _temp_val;
@@ -381,7 +381,7 @@ void Solver::crankNicolson(
       _mat(1,1) = _temp_val;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
@@ -415,7 +415,7 @@ void Solver::crankNicolson(
       _mat(1,1) = _temp_val;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
@@ -451,7 +451,7 @@ void Solver::bdf(
    const double timestep, const double mu)
 {
    // Constants are the same regardless of direction
-   double _temp_val = Constants::SPEED_OF_LIGHT * rho_vec[cell] * kappa_vec[cell] * timestep / 6.;
+   double _temp_val = Constants::SPEED_OF_LIGHT * rho_vec[groupIt] * kappa_vec[groupIt] * timestep / 6.;
 
    double const_A = 1. + _temp_val;
    double const_B = Constants::SPEED_OF_LIGHT * mu * dt / 6.;
@@ -468,7 +468,7 @@ void Solver::bdf(
       _mat(1,1) = _temp_val;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);      
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);      
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
@@ -507,7 +507,7 @@ void Solver::bdf(
       _mat(1,1) = _temp_val;
 
       // Planckian and correction terms
-      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[cell] * kappa_vec[cell] * this->B(groupIt);
+      _temp_val = 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * rho_vec[groupIt] * kappa_vec[groupIt] * this->B(groupIt);
       if (ph.get_use_correction())
       {
          _temp_val += 0.5 * Constants::SPEED_OF_LIGHT * timestep * dx * total_correction(scatteredDirIt, groupIt, cell);
