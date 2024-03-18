@@ -3,7 +3,6 @@
 
 #include "param.h"
 #include <Eigen/Dense>
-#include <string>
 #include <sstream>
 
 using namespace std;
@@ -14,17 +13,29 @@ private:
    /* Param */
    parameter::parameter param;
 
-   int M;                              // Quadrature order, even, num_directions
+   int M;                                   // Quadrature order, even, num_directions
    
    // Energy Group specifics
-   int G;                              // 1 group corresponds to grey case
-   double efirst;                    // right edge energy for first group (keV)
-   double elast;                     // right edge energy for last group (keV)
-   double kappa_grey;                 // Grey opacity
-   
-   double X;                          // Slab thickness
-   int N;                            // Number of cells
-   double dx;                         // cell size
+   int G;                                   // 1 group corresponds to grey case
+   double efirst;                           // right edge energy for first group (keV)
+   double elast;                            // right edge energy for last group (keV)
+   double kappa_grey;                       // Grey opacity
+   double rho;                              // Material density
+   double kappa;                            // Absorption opacity
+   double T;                                // Material temperature
+
+   // Optional energy group bounds and absorption opacities
+   bool have_group_bounds;                  // Contained in a txt file
+   bool have_group_absorption_opacities;    // Contained in a txt file
+   string filename_group_bounds;
+   string filename_group_kappa;
+   Eigen::VectorXd group_bounds;
+   Eigen::VectorXd group_kappa;
+
+   // Slab specifics
+   double X;                           // Slab thickness
+   int N;                              // Number of cells
+   double dx;                          // cell size
    int bc_left_indicator;              // vacuum - 0, // TODO: Change this to an array that matches M / 2
                                        // source - 1, 
                                        // reflective - 2 
@@ -34,9 +45,6 @@ private:
    bool use_mg_equilib;
    Eigen::MatrixXd psi_source; 
 
-   double rho;                        // Material density
-   double kappa;                      // Absorption opacity
-   double T;                          // Material temperature
    double V;                          // Material velocity, beta = V / c
 
    /* Correction terms options */
@@ -76,6 +84,8 @@ public:
    double get_dt() { return dt; }
    int get_max_timesteps() { return max_timesteps; }
    void get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source);
+   void get_group_bounds(Eigen::Ref<Eigen::VectorXd> group_bounds);
+   void get_group_kappa(Eigen::Ref<Eigen::VectorXd> group_kappa);
 };
 
 #endif

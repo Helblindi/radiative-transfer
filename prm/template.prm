@@ -11,10 +11,16 @@
 M=2
 
 ##### Energy Group specifics
-G=1
+G=10
 efirst=.1
 elast=10.
 kappa_grey=1.
+
+# Optional energy group bounds and absorption opacities, to be contained in a txt file 
+have_group_bounds=false
+have_group_absorption_opacities=false
+filename_group_bounds=template_group_bounds.txt
+filename_group_kappa=template_group_kappa_a.txt
 
 ##### Spatial parameters
 X=1.
