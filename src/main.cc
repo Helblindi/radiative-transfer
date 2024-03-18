@@ -22,67 +22,6 @@ using namespace rt;
 //   cout << ")";  
 // }
 
-/* Function to display the parameters used */
-void display_input_quantities(ParameterHandler & parameter_handler)
-{
-   cout << "\n--- Input Parameters ---\n";
-   cout << "Quadrature order: " << parameter_handler.get_M() << endl;
-   cout << "Slab thickness: " << parameter_handler.get_X() << endl;
-   cout << "Number of cells: " << parameter_handler.get_N() << endl;
-   cout << "Material density: " << parameter_handler.get_rho() << endl;
-   cout << "Absorption opacity: " << parameter_handler.get_kappa() << endl;
-   cout << "Material temperature: " << parameter_handler.get_T() << endl;
-   cout << "Right boundary condition: ";
-   
-   // Output boundary conditions
-   switch(parameter_handler.get_bc_right_indicator()) {
-      case 0: // vacuum
-      {
-         cout << "vacuum\n";
-         break;
-      }
-      case 2: // reflective
-      {
-         cout << "reflective\n";
-         break;
-      }
-      case 1: // source
-      {
-         cout << "source\n";
-         break;
-      }
-      default:
-      {
-         cout << "Incorrect boundary conditions provided.\n";
-         return;
-      }
-   }
-
-   cout << "Left boundary condition: ";
-   switch(parameter_handler.get_bc_left_indicator()) {
-      case 0: // vacuum
-      {
-         cout << "vacuum\n\n";
-         break;
-      }
-      case 2: // reflective
-      {
-         cout << "reflective\n\n";
-         break;
-      }
-      case 1: // source
-      {
-         cout << "source\n\n";
-         break;
-      }
-      default:
-      {
-         cout << "Incorrect boundary conditions provided.\n\n";
-         return;
-      }
-   }
-}
-
 
 // template<typename Scalar_, int rank>
 // void shape(const Eigen::Tensor<Scalar_, rank>& x)
@@ -140,7 +79,7 @@ int main(int argc, char **argv)
    ParameterHandler parameter_handler(filename);
    
    // Output all input quantities
-   display_input_quantities(parameter_handler); // TODO: change this function to ParameterHandler class
+   parameter_handler.display_input_quantities(); 
 
    int M = parameter_handler.get_M(),
        N = parameter_handler.get_N(),

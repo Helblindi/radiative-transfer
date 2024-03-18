@@ -143,7 +143,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
       ph.get_group_kappa(kappa_vec);
    } else {
       // For now, set this to grey
-      kappa_vec.setConstant(ph.get_kappa());
+      kappa_vec.setConstant(ph.get_kappa_grey());
       // TODO: Can generate these opacities as is done in 
       // Correction::generate_multigroup_opacities()
    }

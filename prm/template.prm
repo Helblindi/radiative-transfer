@@ -14,7 +14,6 @@ M=2
 G=10
 efirst=.1
 elast=10.
-kappa_grey=1.
 
 # Optional energy group bounds and absorption opacities, to be contained in a txt file 
 have_group_bounds=false
@@ -38,7 +37,7 @@ psi_source=1. 2.
 
 ##### Physics
 rho=2.
-kappa=1.
+kappa_grey=1.
 T=1.
 V=0.
 

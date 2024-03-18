@@ -15,7 +15,6 @@ M=2                    # Quadrature order, even, num_directions
 G=2                    # Num energy groups. 1 group corresponds to grey case
 efirst=.1              # right edge energy for first group (keV)
 elast=10.              # right edge energy for last group (keV)
-kappa_grey=1.          # Grey opacity
 
 ##### Spatial parameters
 X=1.                   # Slab thickness
@@ -33,7 +32,7 @@ psi_source=1.1 2.1     # Source boundary conditions, separated by spaces, corres
 
 ##### Physics
 rho=1.                 # Material density
-kappa=1.               # Absorption opacity
+kappa_grey=1.          # Grey absorption opacity
 T=1.                   # Material temperature
 V=0.                   # Material velocity, beta = V / c
 

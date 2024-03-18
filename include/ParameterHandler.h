@@ -19,9 +19,8 @@ private:
    int G;                                   // 1 group corresponds to grey case
    double efirst;                           // right edge energy for first group (keV)
    double elast;                            // right edge energy for last group (keV)
-   double kappa_grey;                       // Grey opacity
+   double kappa_grey;                       // Grey absorption opacity
    double rho;                              // Material density
-   double kappa;                            // Absorption opacity
    double T;                                // Material temperature
 
    // Optional energy group bounds and absorption opacities
@@ -66,6 +65,9 @@ public:
    ParameterHandler();
    ParameterHandler(const string filename);
 
+   /* Output read in parameters */
+   void display_input_quantities();
+
    /* Getters */
    int get_M() { return M; }
    int get_G() { return G; }
@@ -80,7 +82,6 @@ public:
    int get_bc_right_indicator() { return bc_right_indicator; }
    bool get_use_mg_equilib() { return use_mg_equilib; }
    double get_rho() { return rho; }
-   double get_kappa() { return kappa; }
    bool get_have_group_absorption_opacities() { return have_group_absorption_opacities; }
    double get_T() { return T; }
    double get_V() { return V; }
@@ -90,7 +91,7 @@ public:
    int get_max_timesteps() { return max_timesteps; }
 
    bool get_validation() { return include_validation; }
-   
+
    void get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source);
    void get_group_bounds(Eigen::Ref<Eigen::VectorXd> group_bounds);
    void get_group_kappa(Eigen::Ref<Eigen::VectorXd> group_kappa);

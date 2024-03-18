@@ -14,7 +14,6 @@ M=2
 G=4
 efirst=.1
 elast=10.
-kappa_grey=1.
 
 ##### Spatial parameters
 X=1.
@@ -33,7 +32,7 @@ psi_source=1. 1. 1. 5. 1. 1. 1. 5.
 
 ##### Physics
 rho=1.
-kappa=1.
+kappa_grey=1.
 T=1.
 V=1.
 

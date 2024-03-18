@@ -17,6 +17,67 @@ ParameterHandler::ParameterHandler(const string filename) : param(filename) {
 }
 
 
+void ParameterHandler::display_input_quantities()
+{
+   cout << "\n--- Input Parameters ---\n";
+   cout << "Quadrature order: " << M << endl;
+   cout << "Slab thickness: " << X << endl;
+   cout << "Number of cells: " << N << endl;
+   cout << "Material density: " << rho << endl;
+   cout << "Absorption opacity: " << kappa_grey << endl;
+   cout << "Material temperature: " <<  T << endl;
+   cout << "Right boundary condition: ";
+   
+   // Output boundary conditions
+   switch(bc_right_indicator) {
+      case 0: // vacuum
+      {
+         cout << "vacuum\n";
+         break;
+      }
+      case 2: // reflective
+      {
+         cout << "reflective\n";
+         break;
+      }
+      case 1: // source
+      {
+         cout << "source\n";
+         break;
+      }
+      default:
+      {
+         cout << "Incorrect boundary conditions provided.\n";
+         return;
+      }
+   }
+
+   cout << "Left boundary condition: ";
+   switch(bc_left_indicator) {
+      case 0: // vacuum
+      {
+         cout << "vacuum\n\n";
+         break;
+      }
+      case 2: // reflective
+      {
+         cout << "reflective\n\n";
+         break;
+      }
+      case 1: // source
+      {
+         cout << "source\n\n";
+         break;
+      }
+      default:
+      {
+         cout << "Incorrect boundary conditions provided.\n\n";
+         return;
+      }
+   }
+}
+
+
 // Function to grab parameters from file
 void ParameterHandler::get_parameters()
 {
@@ -24,7 +85,7 @@ void ParameterHandler::get_parameters()
    G = param.get<int>("G", 1);
    efirst = param.get<double>("efirst", .1);
    elast = param.get<double>("elast", 10.);
-   kappa_grey = param.get<double>("kappa_grey", 1.);
+   
    X = param.get<double>("X", 1.);
    N = param.get<int>("N", 100);
    dx = X / N;
@@ -118,7 +179,7 @@ void ParameterHandler::get_parameters()
    }
 
    rho = param.get<double>("rho", 1.);
-   kappa = param.get<double>("kappa", 1.);
+   kappa_grey = param.get<double>("kappa_grey", 1.);
    T = param.get<double>("T", 1.);
    V = param.get<double>("V", 0.);
 
