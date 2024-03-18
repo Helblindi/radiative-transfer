@@ -1,0 +1,54 @@
+#####
+#
+# Parameter file
+# File is case sensitive.  Also, spaces are CRUCIAL.
+# Do not leave a space after parameters.
+# See default.prm for description of variables.
+#
+#####
+
+##### Angle       
+M=2
+
+##### Energy Group specifics
+G=124
+efirst=.1
+elast=10.
+kappa_grey=1.
+
+# Optional energy group bounds and absorption opacities, to be contained in a txt file 
+have_group_bounds=true
+have_group_absorption_opacities=true
+filename_group_bounds=llnl_slab_test_group_bounds.txt
+filename_group_kappa=llnl_slab_test_group_kappa_a.txt
+
+##### Spatial parameters
+X=.4
+N=10
+
+##### Boundary Conditions
+bc_left_indicator=0
+bc_right_indicator=0
+
+##### Equilibrium testing
+use_mg_equilib=false
+
+##### Source conditions
+psi_source=1. 2.
+
+##### Physics
+rho=1.
+kappa=1.
+T=1.
+V=5.994e8
+
+##### Correction terms options
+use_correction=true
+
+##### Time Stepping Options
+ts_method=3
+dt=0.00001
+max_timesteps=50
+
+##### Validation, remove to speed up
+include_validation=false
