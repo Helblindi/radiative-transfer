@@ -2,6 +2,7 @@
 #define PARAMETER_HANDLER
 
 #include "param.h"
+#include "constants.h"
 #include <Eigen/Dense>
 #include <sstream>
 

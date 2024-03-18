@@ -20,12 +20,26 @@ ParameterHandler::ParameterHandler(const string filename) : param(filename) {
 void ParameterHandler::display_input_quantities()
 {
    cout << "\n--- Input Parameters ---\n";
-   cout << "Quadrature order: " << M << endl;
-   cout << "Slab thickness: " << X << endl;
+   cout << "Angle quadrature order: " << M << endl;
+   cout << "Number of energy groups: " << G << endl;
+   if (have_group_bounds) {
+      cout << "Group bounds (keV) specified in file: " << filename_group_bounds << endl;
+   } else {
+      cout << "Group bounds (keV) will be computed logarithmically, with first group edge at "
+           << efirst << " and last group edge at " << elast << endl;
+   }
+   cout << "Slab thickness (cm): " << X << endl;
    cout << "Number of cells: " << N << endl;
-   cout << "Material density: " << rho << endl;
-   cout << "Absorption opacity: " << kappa_grey << endl;
-   cout << "Material temperature: " <<  T << endl;
+   cout << "Material density (g/cm^3): " << rho << endl;
+   if (have_group_absorption_opacities) {
+      cout << "Group opacities (cm^2/g) specified in file: " << filename_group_kappa << endl;
+   } else {
+      cout << "Group opacities will be set to the constant grey opacity (cm^2/g): " 
+           << kappa_grey << endl;
+   }
+   cout << "Material temperature (keV): " <<  T << endl;
+   cout << "Material velocity (cm/shake): " << V << endl;
+   cout << "Beta: " << V / Constants::SPEED_OF_LIGHT << endl;
    cout << "Right boundary condition: ";
    
    // Output boundary conditions
