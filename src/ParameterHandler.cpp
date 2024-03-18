@@ -127,6 +127,8 @@ void ParameterHandler::get_parameters()
    ts_method = param.get<int>("ts_method", 3);
    dt = param.get<double>("dt", 0.00001);
    max_timesteps = param.get<int>("max_timesteps", 1000);
+
+   include_validation = param.get<bool>("include_validation", true);
 }
 
 void ParameterHandler::get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source)

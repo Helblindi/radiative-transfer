@@ -73,7 +73,8 @@ private:
 
 
 public:
-   void generate_group_edges_and_averages(); // inherited from Correction class
+   void generate_group_edges();              // inherited from Correction class
+   void generate_group_averages();           // inherited from Correction class
    void fill_energy_bound_arrays();          // inherited from Correction class
    Solver(ParameterHandler & parameter_handler,
           Eigen::Tensor<double, 3>& psi_mat,

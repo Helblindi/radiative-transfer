@@ -109,8 +109,6 @@ bool Correction::validate_emission()
       emis_tot += kappa_ref(g)*B(g);
    }
 
-   
-
    // total emission thould be equal to sigacT4
    if (abs(emis_tot - sigacT4) > Constants::validation_tolerance)
    {

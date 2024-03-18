@@ -3,7 +3,7 @@
 
 namespace rt 
 {
-void Solver::generate_group_edges_and_averages()
+void Solver::generate_group_edges()
 {
    logfac = (log(elast)-log(efirst))/(num_groups-1.0);
    logfac = exp(logfac);
@@ -11,12 +11,21 @@ void Solver::generate_group_edges_and_averages()
 
    e_edge(0) = 0.0;
    e_edge(1) = efirst;
+
+   for(int g = 1; g < num_groups; g++)
+   {
+      e_edge(g+1) = e_edge(g)*logfac;
+   }
+}
+
+
+void Solver::generate_group_averages()
+{
    e_ave(0) = 0.5*(e_edge(0)+e_edge(1));
    de_ave(0) = e_edge(1) - e_edge(0);
 
    for(int g = 1; g < num_groups; g++)
    {
-      e_edge(g+1) = e_edge(g)*logfac;
       e_ave(g) = 0.5*(e_edge(g) + e_edge(g+1));
       de_ave(g) = e_edge(g+1) - e_edge(g);
    }
@@ -82,14 +91,44 @@ Solver::Solver(ParameterHandler & parameter_handler,
    e_ave.resize(num_groups);
    de_ave.resize(num_groups);
    energy_discretization.resize(num_groups, 2);
-                     
+
+   // Optionally set group edges from file
+   if (ph.get_have_group_bounds()) {
+      ph.get_group_bounds(e_edge);
+   } else {
+      generate_group_edges();
+   }
+   
+   // In either case, generate group averages and fill energy bound arrays
+   generate_group_averages();
+   fill_energy_bound_arrays();
+
+   // Print energy group information
+   cout << left << setw(13) << "Group Index" 
+        << left << setw(16) << "Average Energy" 
+        << left << setw(14) << "Upper Energy" 
+        << left << setw(13) << "Group Width" << endl;
+   cout << left << setw(13) << "-----------"
+        << left << setw(16) << "(keV)---------" 
+        << left << setw(14) << "(keV)-------" 
+    	  << left << setw(13) << "(keV)------" << endl;
+   for(int g = 0;g < num_groups;++g)
+   {
+      cout << left << setw(13) << g
+    	     << left << setw(16) << e_ave(g) 
+           << left << setw(14) << e_edge(g+1) 
+           << left << setw(13) << de_ave(g) << endl;
+   }
+   cout << "\n" << endl;	
+
+   // Set up slab specifics 
    kappa_mat.resize(M,N);                  
    ends.resize(M,num_groups,N,2);      
    prev_ends.resize(M,num_groups,N,2);
    half_ends.resize(M,num_groups,N,2); 
-   rho_vec.resize(N);
-   kappa_vec.resize(N);
-   temperature.resize(N);
+   rho_vec.resize(num_groups);
+   kappa_vec.resize(num_groups);
+   temperature.resize(num_groups);
 
    _mat.resize(2,2);
    _mat_inverse.resize(2,2);
@@ -99,21 +138,26 @@ Solver::Solver(ParameterHandler & parameter_handler,
    // resize balance
    balance.resize(num_groups);
 
-   // Fill constants for now
+   // Fill kappa_vec depending on prm file
+   if (ph.get_have_group_absorption_opacities()) {
+      ph.get_group_kappa(kappa_vec);
+   } else {
+      // For now, set this to grey
+      kappa_vec.setConstant(ph.get_kappa());
+      // TODO: Can generate these opacities as is done in 
+      // Correction::generate_multigroup_opacities()
+   }
+
+   // Fill rest with constants for now
    // TODO: Will need to change this
    rho_vec.setConstant(ph.get_rho());
-   kappa_vec.setConstant(ph.get_kappa());
    temperature.setConstant(ph.get_T());
    dEB.resize(num_groups);
    B.resize(num_groups);
 
-   // 
-                              
+   // Create correction object   
    correction = new Correction(parameter_handler, rho_vec, kappa_vec, temperature, e_edge, 
                                e_ave, de_ave, energy_discretization, m_mu, m_wt);
-
-   generate_group_edges_and_averages();
-   fill_energy_bound_arrays();
    cout << "end solver constructor\n";
 }
 
@@ -199,7 +243,11 @@ void Solver::compute_balance()
 void Solver::computeEquilibriumSources()
 {
    correction->compute_correction(psi_mat_ref);
-   assert(correction->validate_correction() && "Invalid Correction Terms\n");
+   if (ph.get_validation())
+   {
+      assert(correction->validate_correction() && "Invalid Correction Terms\n");
+   }
+   
    correction->get_B(this->B);
    correction->get_dEB(this->dEB);
    for (int i = 0; i < M; i++)
@@ -514,7 +562,11 @@ void Solver::solve()
    for (int _it = 0; _it < _max_timesteps; _it++)
    {
       correction->compute_correction(psi_mat_ref);
-      assert(correction->validate_correction() && "Invalid Correction Terms\n");
+      if (ph.get_validation())
+      {
+         assert(correction->validate_correction() && "Invalid Correction Terms\n");
+      }
+      
       correction->get_B(this->B);
       if (ph.get_use_correction())
       {

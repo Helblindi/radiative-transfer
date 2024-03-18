@@ -55,6 +55,9 @@ private:
    double dt = 0.00001;
    int max_timesteps = 1000;
 
+   /* Validation Options */
+   bool include_validation;
+
    /* Retrieve parameters from file */
    void get_parameters();
 
@@ -68,6 +71,7 @@ public:
    int get_G() { return G; }
    double get_efirst() { return efirst; }
    double get_elast() { return elast; }
+   bool get_have_group_bounds() { return have_group_bounds; }
    double get_kappa_grey() { return kappa_grey; }
    double get_X() { return X; }
    int get_N() { return N; }
@@ -77,12 +81,16 @@ public:
    bool get_use_mg_equilib() { return use_mg_equilib; }
    double get_rho() { return rho; }
    double get_kappa() { return kappa; }
+   bool get_have_group_absorption_opacities() { return have_group_absorption_opacities; }
    double get_T() { return T; }
    double get_V() { return V; }
    bool get_use_correction() { return use_correction; }
    int get_ts_method() { return ts_method; }
    double get_dt() { return dt; }
    int get_max_timesteps() { return max_timesteps; }
+
+   bool get_validation() { return include_validation; }
+   
    void get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source);
    void get_group_bounds(Eigen::Ref<Eigen::VectorXd> group_bounds);
    void get_group_kappa(Eigen::Ref<Eigen::VectorXd> group_kappa);
