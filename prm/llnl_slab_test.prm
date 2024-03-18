@@ -26,14 +26,14 @@ X=.4
 N=10
 
 ##### Boundary Conditions
-bc_left_indicator=0
-bc_right_indicator=0
+bc_left_indicator=2
+bc_right_indicator=1
 
 ##### Equilibrium testing
 use_mg_equilib=false
 
 ##### Source conditions
-psi_source=1. 2.
+psi_source=
 
 ##### Physics
 rho=1.

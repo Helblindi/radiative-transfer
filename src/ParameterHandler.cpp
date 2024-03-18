@@ -89,6 +89,10 @@ void ParameterHandler::display_input_quantities()
          return;
       }
    }
+
+   cout << "Psi_source: \n";
+   cout << psi_source << endl;
+
 }
 
 
@@ -112,6 +116,7 @@ void ParameterHandler::get_parameters()
    // Only need to explicitly read in source conditions if we
    // are not using equilibrium source conditions
    psi_source.resize(M,G);
+   psi_source.setConstant(0.);
    if (!use_mg_equilib)
    {
       string psi_source_s = param.get<string>("psi_source", "no_sources_provided");
@@ -208,8 +213,6 @@ void ParameterHandler::get_parameters()
 
 void ParameterHandler::get_psi_source(Eigen::Ref<Eigen::MatrixXd> psi_source)
 {
-   cout << "shape of reference psi source: " << psi_source.rows() << "," << psi_source.cols() << endl;
-   cout << "shape of class psi source: " << this->psi_source.rows() << "," << this->psi_source.cols() << endl;
    psi_source = this->psi_source;
 }
 
