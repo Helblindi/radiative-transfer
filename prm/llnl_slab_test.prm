@@ -12,8 +12,8 @@ M=2
 
 ##### Energy Group specifics
 G=124
-efirst=.1
-elast=10.
+efirst=
+elast=
 
 # Optional energy group bounds and absorption opacities, to be contained in a txt file 
 have_group_bounds=true
