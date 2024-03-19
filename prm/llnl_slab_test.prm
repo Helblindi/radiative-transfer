@@ -12,8 +12,8 @@ M=2
 
 ##### Energy Group specifics
 G=124
-efirst=
-elast=
+#efirst=.1
+#elast=10.
 
 # Optional energy group bounds and absorption opacities, to be contained in a txt file 
 have_group_bounds=true
@@ -26,14 +26,14 @@ X=.4
 N=10
 
 ##### Boundary Conditions
-bc_left_indicator=2
-bc_right_indicator=1
+bc_left_indicator=0
+bc_right_indicator=0
 
 ##### Equilibrium testing
 use_mg_equilib=false
 
 ##### Source conditions
-psi_source=
+#psi_source=
 
 ##### Physics
 rho=1.

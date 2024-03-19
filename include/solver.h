@@ -29,6 +29,7 @@ private:
    const double ac = Constants::RADIATION_CONSTANT_A*Constants::SPEED_OF_LIGHT;
    Eigen::Tensor<double, 3>& psi_mat_ref;         // solution, angular intensity ref
    Eigen::Ref<Eigen::MatrixXd> phi_ref;           // angle-integrated intensity ref
+   Eigen::MatrixXd phi_plus;                      // angle-integrated intensity over positive direction
    Eigen::Ref<Eigen::MatrixXd> F_ref;             // radiative flux ref
    Eigen::MatrixXd kappa_mat;                     // kappa_mat
 
@@ -81,10 +82,12 @@ public:
           Eigen::Ref<Eigen::MatrixXd> phi,
           Eigen::Ref<Eigen::MatrixXd> F);
           
-   void compute_angle_integrated_density();
+   void compute_angle_integrated_intensity();
+   void compute_positive_angle_integrated_intensity();
    void compute_radiative_flux();
    void compute_balance();
    void get_balance(Eigen::Ref<Eigen::VectorXd> balance) { balance = this->balance; }
+   void get_phi_plus(Eigen::Ref<Eigen::MatrixXd> phi_plus) { phi_plus = this->phi_plus; }
 
    void solve();
 };

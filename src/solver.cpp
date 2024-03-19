@@ -126,6 +126,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
    ends.resize(M,num_groups,N,2);      
    prev_ends.resize(M,num_groups,N,2);
    half_ends.resize(M,num_groups,N,2); 
+   phi_plus.resize(num_groups, N);
    rho_vec.resize(num_groups);
    kappa_vec.resize(num_groups);
    temperature.resize(num_groups);
@@ -162,7 +163,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
 }
 
 
-void Solver::compute_angle_integrated_density()
+void Solver::compute_angle_integrated_intensity()
 {
    for (int g = 0; g < num_groups; g++)
    {
@@ -172,6 +173,23 @@ void Solver::compute_angle_integrated_density()
          for (int mu_it = 0; mu_it < M; mu_it++)
          {
             phi_ref(g, cell_it) += m_wt[mu_it] * psi_mat_ref(mu_it, g, cell_it);
+         }
+      }
+   }
+}
+
+
+void Solver::compute_positive_angle_integrated_intensity()
+{
+   for (int g = 0; g < num_groups; g++)
+   {
+      for (int cell_it = 0; cell_it < N; cell_it++)
+      {
+         phi_plus(g, cell_it) = 0.;
+         for (int mu_it = M/2; mu_it < M; mu_it++)
+         {
+            assert(m_mu[mu_it] > 0.);
+            phi_plus(g, cell_it) += m_wt[mu_it] * psi_mat_ref(mu_it, g, cell_it);
          }
       }
    }

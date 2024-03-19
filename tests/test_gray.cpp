@@ -70,7 +70,7 @@ int main()
    solver.solve();
 
    // Fill phi and F
-   solver.compute_angle_integrated_density();
+   solver.compute_angle_integrated_intensity();
    solver.compute_radiative_flux();
 
    // Verify balance

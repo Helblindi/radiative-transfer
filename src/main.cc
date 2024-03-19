@@ -102,14 +102,20 @@ int main(int argc, char **argv)
    solver.solve();
 
    // Fill phi and F
-   solver.compute_angle_integrated_density();
+   solver.compute_angle_integrated_intensity();
    solver.compute_radiative_flux();
 
    // Verify balance
    solver.compute_balance();
 
+   // Get positive angle integrated intensity (just useful for llnl test)
+   Eigen::MatrixXd phi_plus(G,N);
+   solver.compute_positive_angle_integrated_intensity();
+   solver.get_phi_plus(phi_plus);
+
    // Print to file to be analyzed in python
    print_to_file("phi.csv", phi);
+   print_to_file("phi_plus.csv", phi_plus);
    print_to_file("psi.csv", psi_mat);
    print_to_file("x.csv", x);
    print_to_file("F.csv", F);
