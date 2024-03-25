@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 def main():
    df_x = pd.read_csv("../build/tests/gray-test-x.csv", sep=',', header=None)
-   df_phi = pd.read_csv("../build/tests/gray-test-phi.csv", delim_whitespace=True, header=None)
-   df_F = pd.read_csv("../build/tests/gray-test-F.csv", delim_whitespace=True, header=None)
+   df_phi = pd.read_csv("../build/tests/gray-test-phi.csv", sep='\s+', header=None)
+   df_F = pd.read_csv("../build/tests/gray-test-F.csv", sep='\s+', header=None)
 
    num_G = df_phi.shape[0]
    num_N = df_phi.shape[1]

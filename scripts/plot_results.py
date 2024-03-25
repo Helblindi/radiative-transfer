@@ -40,9 +40,10 @@ def main():
    # plt::title("Testing");
    # plt::show();
    df_x = pd.read_csv("../build/x.csv", sep=',', header=None)
-   df_phi = pd.read_csv("../build/phi.csv", delim_whitespace=True, header=None)
-   df_F = pd.read_csv("../build/F.csv", delim_whitespace=True, header=None)
-   df_psi = pd.read_csv("../build/psi.csv", delim_whitespace=True, header=None)
+   df_phi = pd.read_csv("../build/phi.csv", sep='\\s+', header=None)
+   df_phi_plus = pd.read_csv("../build/phi_plus.csv", sep='\\s+', header=None)
+   df_F = pd.read_csv("../build/F.csv", sep='\\s+', header=None)
+   df_psi = pd.read_csv("../build/psi.csv", sep='\\s+', header=None)
 
    num_G = df_phi.shape[0]
    num_N = df_phi.shape[1]
@@ -75,6 +76,16 @@ def main():
    
    plt.legend()
    plt.savefig("phi.png")
+   plt.clf()
+
+   # phi plus
+   for g in range(num_G):
+      phi_plus_arr_g = df_phi_plus.to_numpy()[g]
+      _label = "phi_plus, g=" + str(g)
+      plt.plot(x_arr, phi_plus_arr_g, label=_label)
+   
+   plt.legend()
+   plt.savefig("phi_plus.png")
    plt.clf()
 
    # psi 
