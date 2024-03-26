@@ -170,7 +170,7 @@ Solver::Solver(ParameterHandler & parameter_handler,
       double mu = m_mu[i];
       for (int g = 0; g < num_groups; g++)
       {
-         double val = B(g) * rho_vec(g) * kappa_vec(g);
+         double val = B(g);
          for (int cell_it = 0; cell_it < N; cell_it++)
          {
             psi_mat_ref(i, g, cell_it) = val;

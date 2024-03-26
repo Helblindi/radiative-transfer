@@ -23,7 +23,7 @@ filename_group_kappa=llnl_slab_test_group_kappa_a.txt
 
 ##### Spatial parameters
 X=.4
-N=10
+N=50
 
 ##### Boundary Conditions
 bc_left_indicator=0
@@ -39,15 +39,16 @@ use_mg_equilib=false
 rho=1.
 kappa_grey=1.
 T=1.
-V=5.994
+#V=5.994
+V=0.
 
 ##### Correction terms options
 use_correction=true
 
 ##### Time Stepping Options
 ts_method=3
-dt=0.00001
-max_timesteps=50
+dt=0.001
+max_timesteps=2
 
 ##### Validation, remove to speed up
 include_validation=false
