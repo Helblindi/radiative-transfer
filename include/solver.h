@@ -37,6 +37,7 @@ private:
                                                   // Possible: n + 1/2 predicted, n + 1/2, n+1 predicted, n+1
    Eigen::Tensor<double, 4> prev_ends;            // (n)
    Eigen::Tensor<double, 4> half_ends;            // (n+1/2) Used in BDF2 stepping
+   Eigen::VectorXd left_ends, right_ends;
    Eigen::VectorXd rho_vec, kappa_vec, temperature;
    Eigen::VectorXd B;                             // Planckian terms by group, computed in the Correction class
    Eigen::VectorXd dEB;                           // (d(EB)/dE)_g * Delta E_g, computed in the Correction class
@@ -48,7 +49,6 @@ private:
    double local_bdry_prev_it = 0.;  // (n),     This is also given by the upwinding on the previous cell at the previous timestep.
    double local_bdry = 0.;          // (n+1),   This will be given to us by the upwinding on the previous cell.
    double half_local_bdry = 0.;     // (n+1/2), This will be given to us by the upwinding on the previous cell.
-   double psi_half = 0.;
    Eigen::MatrixXd _mat, _mat_inverse;
    Eigen::VectorXd _rhs, _res;
    /* ============ end main ============ */
@@ -90,6 +90,11 @@ public:
    void get_phi_plus(Eigen::Ref<Eigen::MatrixXd> phi_plus) { phi_plus = this->phi_plus; }
 
    void solve();
+
+   // Getters that may be useful for plotting
+   void get_e_ave(Eigen::Ref<Eigen::VectorXd> e_ave) { e_ave = this->e_ave; }
+   void compute_group_ends();
+   void get_ends(const string side, Eigen::Ref<Eigen::VectorXd> group_ends);
 };
 } // End namespace rt
 #endif // SOLVER

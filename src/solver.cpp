@@ -123,7 +123,9 @@ Solver::Solver(ParameterHandler & parameter_handler,
 
    // Set up slab specifics 
    kappa_mat.resize(M,N);                  
-   ends.resize(M,num_groups,N,2);      
+   ends.resize(M,num_groups,N,2);
+   left_ends.resize(num_groups);
+   right_ends.resize(num_groups);
    prev_ends.resize(M,num_groups,N,2);
    half_ends.resize(M,num_groups,N,2); 
    phi_plus.resize(num_groups, N);
@@ -232,11 +234,11 @@ void Solver::compute_balance()
          if (mu < 0.)
          {
             j_half_minus -= ends(mu_it,g,0,0) * mu * m_wt[mu_it]; // psi_1/2
-            jN_half_minus -= ends(mu_it,g,N-1,1) * mu * m_wt[mu_it]; // psi_N+1/2
+            jN_half_minus -= ends(mu_it,g,N-1,0) * mu * m_wt[mu_it]; // psi_N+1/2
          }
          else 
          {
-            j_half_plus += ends(mu_it,g,0,0) * mu * m_wt[mu_it]; // psi_1/2
+            j_half_plus += ends(mu_it,g,0,1) * mu * m_wt[mu_it]; // psi_1/2
             jN_half_plus += ends(mu_it,g,N-1,1) * mu * m_wt[mu_it]; // psi_N+1/2
          }
       }
@@ -247,12 +249,13 @@ void Solver::compute_balance()
          _src += rho_vec[g] * kappa_vec[g] * ac * pow(temperature[g],4) * dx;
       }
 
-      double sources = jN_half_plus + j_half_minus + _abs;
-      double sinks = j_half_plus + jN_half_minus + _src;
+      double sources = j_half_plus + jN_half_minus + _src;
+      double sinks = jN_half_plus + j_half_minus + _abs;
+      double sources_planck = 1.;
       cout << "sources: " << sources << endl;
       cout << "sinks: " << sinks << endl;
 
-      balance(g) = abs( (jN_half_plus + j_half_minus + _abs) - (j_half_plus + jN_half_minus + _src) ) / (j_half_plus + jN_half_minus + _src);
+      balance(g) = abs( sinks - sources ) / sources;
       cout << "balance at (" << g << "): " << balance(g) << endl;
    }
 }
@@ -794,6 +797,47 @@ void Solver::solve()
    } // End time loop
 
    // correction->Print();
+}
+
+
+void Solver::compute_group_ends()
+{
+   double mu = 0.;
+   left_ends.setConstant(0.);
+   right_ends.setConstant(0.);
+
+   for (int g = 0; g < num_groups; g++)
+   {
+      for (int mu_it = 0; mu_it < M; mu_it++)
+      {
+         mu = m_mu[mu_it];
+
+         if (mu < 0.)
+         {
+            left_ends(g) += ends(mu_it, g, 0, 0);
+         }
+         else
+         {
+            right_ends(g) += ends(mu_it, g, N-1, 1);
+         }
+      }
+      left_ends(g) /= (de_ave(g) * Constants::SPEED_OF_LIGHT);
+      right_ends(g) /= (de_ave(g) * Constants::SPEED_OF_LIGHT);
+   }
+}
+
+
+void Solver::get_ends(const string side, Eigen::Ref<Eigen::VectorXd> group_ends)
+{
+   assert((side=="left" || side=="right") && "Invalid option for 'side'.");
+   if (side == "left")
+   {
+      group_ends = left_ends;
+   }
+   else
+   {
+      group_ends = right_ends;
+   }
 }
 
 } // End ns rt

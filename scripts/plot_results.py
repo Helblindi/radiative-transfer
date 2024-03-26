@@ -45,6 +45,10 @@ def main():
    df_F = pd.read_csv("../build/F.csv", sep='\\s+', header=None)
    df_psi = pd.read_csv("../build/psi.csv", sep='\\s+', header=None)
 
+   df_eave  = pd.read_csv("../build/e_ave.csv", sep=",", header=None)
+   df_rends = pd.read_csv("../build/right_ends.csv", sep=",", header=None).astype(float)
+   df_lends = pd.read_csv("../build/left_ends.csv", sep=",", header=None).astype(float)
+
    num_G = df_phi.shape[0]
    num_N = df_phi.shape[1]
    num_M = df_psi.shape[0]
@@ -101,6 +105,14 @@ def main():
    # plt.show()
    plt.clf()
 
+   # plot left and right ends
+   print(df_eave.to_numpy()[:,0])
+   print(df_lends.to_numpy()[:,0])
+   # plt.plot(df_eave.to_numpy()[:,0], df_lends.to_numpy()[:,0], label="left ends")
+   plt.plot(df_eave.to_numpy()[:,0], df_rends.to_numpy()[:,0], label="right ends")
+   plt.legend()
+   plt.savefig("ends.png")
+   plt.clf()
 
    return 
 

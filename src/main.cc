@@ -120,5 +120,17 @@ int main(int argc, char **argv)
    print_to_file("x.csv", x);
    print_to_file("F.csv", F);
 
+   // Print info from energy groups
+   Eigen::VectorXd e_ave(G);
+   solver.get_e_ave(e_ave);
+   print_to_file("e_ave.csv", e_ave);
+
+   Eigen::VectorXd left_ends(G), right_ends(G);
+   solver.compute_group_ends();
+   solver.get_ends("left", left_ends);
+   solver.get_ends("right", right_ends);
+   print_to_file("left_ends.csv", left_ends);
+   print_to_file("right_ends.csv", right_ends);
+
    return 0;
 }
