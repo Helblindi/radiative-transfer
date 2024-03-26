@@ -161,6 +161,29 @@ Solver::Solver(ParameterHandler & parameter_handler,
    // Create correction object   
    correction = new Correction(parameter_handler, rho_vec, kappa_vec, temperature, e_edge, 
                                e_ave, de_ave, energy_discretization, m_mu, m_wt);
+
+   // Initialize solution to sigma_a,g B_g
+   // dir, group, cell
+   correction->get_B(B);
+   for (int i = 0; i < M; i++)
+   {
+      double mu = m_mu[i];
+      for (int g = 0; g < num_groups; g++)
+      {
+         double val = B(g) * rho_vec(g) * kappa_vec(g);
+         for (int cell_it = 0; cell_it < N; cell_it++)
+         {
+            psi_mat_ref(i, g, cell_it) = val;
+            ends(i,g,cell_it,0) = val;
+            ends(i,g,cell_it,1) = val;
+         }
+      }
+   }
+
+   cout << "B: " << B << endl;
+   cout << "psi_mat_ref: " << psi_mat_ref << endl;
+
+
    cout << "end solver constructor\n";
 }
 

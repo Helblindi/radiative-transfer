@@ -317,6 +317,9 @@ Correction::Correction(ParameterHandler & parameter_handler,
    cor3.resize(num_groups, ph.get_N());
    total_correction.resize(ph.get_M(), num_groups, ph.get_N());
 
+   // Initialize B and dBdT
+   generate_planck_integrals();
+
    // All other helper functions depend on temperature, 
    // which will eventually change at each time step
 }

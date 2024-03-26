@@ -54,7 +54,7 @@ private:
    /* ============ end main ============ */
 
    Correction * correction;
-   Eigen::Tensor<double, 3> total_correction;
+   Eigen::Tensor<double, 3> total_correction; // dir, group, cell
    double logfac;
    double efirst, elast;
    Eigen::VectorXd e_edge, e_ave, de_ave; // Group edge, average energies, and average group widths in kev
